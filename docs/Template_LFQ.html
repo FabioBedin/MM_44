@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Fabio Bedin | MS-Unit at IEO" />
+
+
+<title>LFQ_Analysis</title>
+
+<script src="site_libs/header-attrs-2.12/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+<script src="site_libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<link href="site_libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="site_libs/datatables-binding-0.21/datatables.js"></script>
+<link href="site_libs/dt-core-1.11.3/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="site_libs/dt-core-1.11.3/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="site_libs/dt-core-1.11.3/js/jquery.dataTables.min.js"></script>
+<link href="site_libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<script src="site_libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Template_LFQ</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">LFQ_Analysis</h1>
+<h4 class="author">Fabio Bedin | MS-Unit at IEO</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2022-04-12
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>MM_44/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.0). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20220412code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20220412)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20220412code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20220412)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongef7d0d7">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> ef7d0d7
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongef7d0d7"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version ef7d0d7.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  code/custom_functions.R
+    Untracked:  data/expdesign.tsv
+    Untracked:  data/proteinGroups.txt
+    Untracked:  output/results_table_OOPS_CDDP_vs_OOPS_NT.xlsx
+    Untracked:  output/results_table_OOPS_CDDP_vs_OOPS_NTno_imp.xlsx
+    Untracked:  output/results_table_WCE_CDDP_vs_WCE_NT.xlsx
+
+Unstaged changes:
+    Modified:   analysis/_site.yml
+    Deleted:    analysis/about.Rmd
+    Deleted:    analysis/license.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/Template_LFQ.Rmd</code>) and HTML
+(<code>docs/Template_LFQ.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+ef7d0d7
+</td>
+<td>
+FabioBedin
+</td>
+<td>
+2022-04-12
+</td>
+<td>
+first commit
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<style type="text/css">
+p{
+  font-size: 16px;
+}
+</style>
+<pre class="r"><code>## Proteomics
+library(&quot;MBQN&quot;)
+library(&quot;DEP&quot;)
+library(&quot;SummarizedExperiment&quot;)
+library(&quot;preprocessCore&quot;)
+library(&quot;enrichR&quot;)
+library(&quot;gprofiler2&quot;)
+library(&quot;org.Hs.eg.db&quot;)
+library(&quot;rrvgo&quot;)
+
+## Plots
+library(&quot;DT&quot;)
+library(&quot;patchwork&quot;)
+library(&quot;datapasta&quot;)
+library(&quot;ggstatsplot&quot;)
+library(&quot;UpSetR&quot;)
+library(&quot;ggrepel&quot;)
+library(&quot;visdat&quot;)
+library(&quot;naniar&quot;)
+
+## Networks
+library(&quot;STRINGdb&quot;)
+library(&quot;RCy3&quot;)
+library(&quot;RColorBrewer&quot;)
+
+## Other
+library(&quot;here&quot;)
+library(&quot;openxlsx&quot;)
+library(&quot;tidyverse&quot;)</code></pre>
+<pre class="r"><code>source(here::here(&quot;code/custom_functions.R&quot;)) </code></pre>
+<pre class="r"><code>data &lt;- read.csv(here::here(paste0(&quot;data/&quot;, params$proteinGroups)), header = TRUE,stringsAsFactors = FALSE, sep = &quot;\t&quot;)
+## qui metterei anche Razor...unique.peptides al posto di Peptides, perchè così non conto i peptidi che sono attribuiti a più di 1 PG
+data &lt;- data[data$Reverse != &quot;+&quot; &amp; data$Potential.contaminant != &quot;+&quot; &amp; data$Only.identified.by.site != &quot;+&quot; &amp; data$Peptides &gt;= params$n_peptides,]
+
+data_unique &lt;- make_unique(data, &quot;Gene.names&quot;, &quot;Protein.IDs&quot;, delim = &quot;;&quot;)</code></pre>
+<pre class="r"><code>cond_1 &lt;- params$test_1
+
+cond_2 &lt;- params$test_2
+
+conditions&lt;-c(cond_1,cond_2)
+
+test&lt;- paste(cond_1,cond_2,sep=&quot;_vs_&quot;)
+
+expdesign &lt;- read.table(here::here(paste0(&quot;data/&quot;, params$expdesign)), header = T, stringsAsFactors = F)
+
+expdesign &lt;- subset(expdesign, condition %in% conditions)
+
+columns&lt;-match(paste(&quot;LFQ.intensity.&quot;,expdesign$label,sep=&quot;&quot;),colnames(data_unique))
+
+data_se &lt;- make_se(data_unique, columns, expdesign)
+
+## define automaticaly the best statistical threshold to filter data besed on replicates:
+if(max(expdesign$replicate)&lt;=3){
+       threshold&lt;-0
+     } else if(max(expdesign$replicate)&lt;6){
+       threshold&lt;-1
+     } else if (max(expdesign$replicate)&gt;=6){
+       threshold&lt;-trunc(max(expdesign$replicate)*0.25) ## 0.25 serve per avere sempre il 75% di valid vales
+     }
+
+data_filt &lt;- filter_missval(data_se, thr = threshold)</code></pre>
+<div id="oops_cddp-vs-oops_nt" class="section level1">
+<h1><strong>OOPS_CDDP</strong> vs <strong>OOPS_NT</strong></h1>
+<hr />
+</div>
+<div id="introduction" class="section level1">
+<h1><strong>Introduction</strong></h1>
+<p>First, we need to wrangling the original dataset. From the
+<strong>proteinGroups</strong> obtained by <a
+href="https://www.maxquant.org/">MaxQuant</a> software, I remove
+proteins that are marked form the software as potential contaminant,
+only identify by site and reverse.<br />
+We che also filter the initial datasets by excluding all proteins
+identified by less than 2 peptides.<br />
+Now, we generate some quality control plots to investigate the structure
+of the dataset and observe the effect of filters.</p>
+<div id="normalization-strategy" class="section level4">
+<h4><strong>Normalization strategy:</strong></h4>
+<pre class="r"><code>if(params$Normalization == &quot;VSN&quot;){
+  data_filt &lt;- normalize_vsn(data_filt)
+  print(&quot;VSN normalization is used&quot;)
+} else if(params$Normalization == &quot;MBQN&quot;){
+  data_filt &lt;- normalize_MBQN(data_filt)
+  print(&quot;MBQN normalization is used&quot;)
+} else {
+  print(&quot;Max-LFQ normalization is used&quot;)
+}</code></pre>
+<p>[1] “Max-LFQ normalization is used”</p>
+</div>
+<div id="quality-control-plots"
+class="section level2 tabset tabset-fade">
+<h2 class="tabset tabset-fade"><strong>1. Quality control
+plots</strong></h2>
+<div id="proteins-per-samples" class="section level3 tabset">
+<h3 class="tabset">Proteins per samples</h3>
+<p>This plot show the number of proteins identify in each samples
+<em>after and before User define</em> filters:</p>
+<div id="filtered" class="section level4">
+<h4>Filtered</h4>
+<pre class="r"><code>plot_numbers_lables(data_filt)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/proteins-filt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="not-filtered" class="section level4">
+<h4>Not-Filtered</h4>
+<pre class="r"><code>plot_numbers_lables(data_se)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/proteins-NOfilt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="distributions" class="section level3 tabset">
+<h3 class="tabset">Distributions</h3>
+<p>This plot is useful for checking the distributions of the samples
+<em>after and before User define</em> filters:</p>
+<div id="filtered-1" class="section level4">
+<h4>Filtered</h4>
+<pre class="r"><code>plot_normalization(data_filt)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/normalization-filt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="not-filtered-1" class="section level4">
+<h4>Not-Filtered</h4>
+<pre class="r"><code>plot_normalization(data_se)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/normalization-NOfilt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="missing-data" class="section level3 tabset">
+<h3 class="tabset">Missing data</h3>
+<p>This plot we can explore the missing data pattern <em>after and
+before User define</em> filters. Notice that the percentages of
+missingness are provided in the data. These are accurate to 1 decimal
+place. Also the dataset is arranged by columns with most
+missingness.</p>
+<div id="filtered-2" class="section level4">
+<h4>Filtered</h4>
+<pre class="r"><code>assay(data_filt) %&gt;% 
+  as.data.frame() %&gt;% 
+  vis_miss(., sort_miss = TRUE)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/missing-data-filt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="not-filtered-2" class="section level4">
+<h4>Not-Filtered</h4>
+<pre class="r"><code>assay(data_se) %&gt;% 
+  as.data.frame() %&gt;% 
+  vis_miss(., sort_miss = TRUE)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/missing-data-NOfilt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="sample-cvs" class="section level3 tabset">
+<h3 class="tabset">Sample CVs</h3>
+<p>The coefficient of variation (CV) is a statistical measure of the
+dispersion of data points in a data series around the mean. The
+coefficient of variation represents the ratio of the standard deviation
+to the mean, and it is a useful statistic for comparing the degree of
+variation from one data series to another, even if the means are
+drastically different from one another.</p>
+<div id="filtered-3" class="section level4">
+<h4>Filtered</h4>
+<pre class="r"><code>plot_cvs(data_filt)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/CVs-filt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="not-filtered-3" class="section level4">
+<h4>Not-Filtered</h4>
+<pre class="r"><code>plot_cvs(data_se)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/CVs-NOfilt-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="upset-plot" class="section level2 tabset tabset-fade">
+<h2 class="tabset tabset-fade"><strong>2. Upset plot</strong></h2>
+<p>With this plot we can identify the numper of prteins in common within
+the 2 conditions or in common between all condition.</p>
+<div id="oops_cddp" class="section level3">
+<h3>OOPS_CDDP</h3>
+<pre class="r"><code>define_set &lt;- assay(data_filt) %&gt;%  as.data.frame() %&gt;% select(starts_with(cond_1)) %&gt;% colnames()
+n_sets &lt;- length(define_set)
+
+assay(data_filt) %&gt;% 
+  as.data.frame() %&gt;% 
+  select(starts_with(cond_1)) %&gt;% 
+  rownames_to_column() %&gt;% 
+  pivot_longer(!rowname, names_to = &quot;samples&quot;, values_to = &quot;intensity&quot;) %&gt;% 
+  mutate(intensity = if_else(is.na(intensity), 0, 1)) %&gt;% 
+  pivot_wider(names_from = samples, values_from = intensity) %&gt;% 
+  as.data.frame() %&gt;% 
+  upset(nsets = n_sets,
+        sets = define_set,
+        order.by = &quot;freq&quot;,
+        keep.order = T,
+        text.scale = 2.5,
+        point.size = 4,
+        line.size = 0.5, 
+        sets.bar.color = &quot;coral2&quot;,
+        main.bar.color  = &quot;gray44&quot;)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/upset-cond1-1.png" width="1440" style="display: block; margin: auto;" /></p>
+</div>
+<div id="oops_nt" class="section level3">
+<h3>OOPS_NT</h3>
+<pre class="r"><code>define_set &lt;- assay(data_filt) %&gt;%  as.data.frame() %&gt;% select(starts_with(cond_2)) %&gt;% colnames()
+n_sets &lt;- length(define_set)
+
+assay(data_filt) %&gt;% 
+  as.data.frame() %&gt;% 
+  select(starts_with(cond_2)) %&gt;% 
+  rownames_to_column() %&gt;% 
+  pivot_longer(!rowname, names_to = &quot;samples&quot;, values_to = &quot;intensity&quot;) %&gt;% 
+  mutate(intensity = if_else(is.na(intensity), 0, 1)) %&gt;% 
+  pivot_wider(names_from = samples, values_from = intensity) %&gt;% 
+  as.data.frame() %&gt;% 
+  upset(nsets = n_sets,
+        sets = define_set,
+        order.by = &quot;freq&quot;,
+        keep.order = T,
+        text.scale = 2.5,
+        point.size = 4,
+        line.size = 0.5, 
+        sets.bar.color = &quot;turquoise3&quot;,
+        main.bar.color  = &quot;gray44&quot;)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/upset-cond2-1.png" width="1440" style="display: block; margin: auto;" /></p>
+</div>
+<div id="both-conditions" class="section level3">
+<h3>Both conditions</h3>
+<pre class="r"><code>define_set &lt;- assay(data_filt) %&gt;% colnames()
+n_sets &lt;- length(define_set)
+n_each &lt;- n_sets / 2
+
+assay(data_filt) %&gt;% 
+  as.data.frame() %&gt;% 
+  rownames_to_column() %&gt;% 
+  pivot_longer(!rowname, names_to = &quot;samples&quot;, values_to = &quot;intensity&quot;) %&gt;% 
+  mutate(intensity = if_else(is.na(intensity), 0, 1)) %&gt;% 
+  pivot_wider(names_from = samples, values_from = intensity) %&gt;% 
+  as.data.frame() %&gt;% 
+  upset(nsets = n_sets,
+        sets = define_set,
+        order.by = &quot;freq&quot;,
+        keep.order = T,
+        text.scale = 2.5,
+        point.size = 4,
+        line.size = 0.5, 
+        #sets.bar.color = rep(c(&quot;red3&quot;, &quot;royalblue1&quot;), each = n_each),
+        main.bar.color  = &quot;gray44&quot;)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/upset-both-1.png" width="1440" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="imputation" class="section level2">
+<h2><strong>3. Imputation</strong></h2>
+<p>An idealized version of a label-free discovery mass spectrometry
+proteomics experiment would provide absolute abundance measurements for
+a whole proteome, across varying conditions. Unfortunately, this ideal
+is not realized. Measurements are made on peptides requiring an
+inferential step to obtain protein level estimates. The inference is
+complicated by experimental factors that necessitate relative abundance
+estimation and result in widespread non-ignorable missing data. Relative
+abundance on the log scale takes the form of parameter contrasts. In a
+complete-case analysis, contrast estimates may be biased by missing data
+and a substantial amount of useful information will often go unused.</p>
+<pre class="r"><code>data_imputed &lt;- mix_imputation_mean(data_filt, cond1 = cond_1, cond2 = cond_2)
+
+plot_imputation(data_filt, data_imputed)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/imputation-1.png" width="960" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>data_filt &lt;- data_imputed</code></pre>
+</div>
+<div id="differential-enrichment-analysis" class="section level2">
+<h2><strong>4. Differential enrichment analysis</strong></h2>
+<p>Protein-wise linear models combined with empirical Bayes statistics
+are used for the differential enrichment analysis (or differential
+expression analysis) and False discovery rate (FDR) is ajusted with
+<em>Benjamini-Hochberg</em> procedure. Significant proteins are are
+define with <strong>FDR = 0.05</strong> and <strong>Fold change =
+1</strong></p>
+<pre class="r"><code>data_diff &lt;- test_diff_BH(data_filt, type = &quot;manual&quot;, test = test)
+
+dep &lt;- add_rejections(data_diff, alpha = params$FDR, lfc = params$Fold_change)
+
+results&lt;-get_results(dep)</code></pre>
+<p>There are <strong>262</strong> significant proteins in
+<strong>OOPS_CDDP</strong> vs <strong>OOPS_NT</strong> comparison.</p>
+<p>The results from the previous analysis can be easily visualized by a
+number of functions. These visualizations assist in the determination of
+the optimal cutoffs to be used, highlight the most interesting samples
+and contrasts, and pinpoint differentially enriched/expressed
+proteins.</p>
+<div id="visualization-of-the-results"
+class="section level3 tabset tabset-fade">
+<h3 class="tabset tabset-fade"><strong>4.1. Visualization of the
+results</strong></h3>
+<div id="pca" class="section level4">
+<h4>PCA</h4>
+<p>The PCA plot can be used to get a high-level overview of the data.
+This can be very useful to observe batch effects, such as clear
+differences between replicates.</p>
+<pre class="r"><code>if(params$Imputation){
+  if(nrow(dep) &gt;= 500){
+    n_value &lt;- 500
+  }else {
+    n_value &lt;- nrow(dep)
+  }
+  plot_pca(dep, x = 1, y = 2, n = n_value, point_size = 4, indicate = &quot;condition&quot;, label = T, label_size = 3)
+} else {
+  var &lt;- apply(assay(dep), 1, sd)
+  df &lt;- assay(dep)[order(var, decreasing = TRUE)[seq_len(nrow(dep))],]
+  n_value &lt;- df %&gt;% as.data.frame() %&gt;% drop_na() %&gt;% nrow()
+  if(n_value &gt;= 500){
+    n_value &lt;- 500
+  }
+  plot_pca(dep, x = 1, y = 2, n = n_value, point_size = 4, indicate = &quot;condition&quot;, label = T, label_size = 3)
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/PCA-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="volcano" class="section level4">
+<h4>Volcano</h4>
+<p>Volcano plots allows to inspect the enrichment of proteins between
+the two samples (x axis) and their corresponding adjusted p value (y
+axis).</p>
+<pre class="r"><code>plot_volcano(dep, contrast=test, add_names=T, label_size=5, adjusted = F)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/volcano-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="volcano-and-unique" class="section level4">
+<h4>Volcano and unique</h4>
+<pre class="r"><code>plot_volcano_2(dep, contrast=test, add_names=T, label_size=5, adjusted = F, unique_vec = uni_name)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/volcano-unique-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="correlation" class="section level4">
+<h4>Correlation</h4>
+<pre class="r"><code>plot_cor(dep, significant = TRUE, lower = 0, upper = 1, pal = &quot;Reds&quot;)</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/correlation-matrix-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="cluster-heatmap" class="section level4">
+<h4>Cluster heatmap</h4>
+<p>The heatmap representation gives an overview of all significant
+proteins (rows) in all samples (columns). This allows to see general
+trends, for example if one sample or replicate is really different
+compared to the others. Additionally, the clustering of samples
+(columns) can indicate closer related samples and clustering of proteins
+(rows) indicates similarly behaving proteins.</p>
+<pre class="r"><code>if(results %&gt;% filter(significant) %&gt;% nrow() &lt;= 100){
+  plot_heatmap(dep, type = &quot;centered&quot;, kmeans = TRUE, k = 5, show_row_names = T, indicate = &quot;condition&quot;, col_limit = 5)
+}else {
+  plot_heatmap(dep, type = &quot;centered&quot;, kmeans = TRUE, k = 5, show_row_names = F, indicate = &quot;condition&quot;, col_limit = 5)
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/cluster-heatmap-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="result-table" class="section level3">
+<h3><strong>4.2. Result table</strong></h3>
+<p>In this table are summarized the results of DEP analysis, sorted by
+p.value. Proteins that are UP regulated are colored with a red box in
+Fold change column, in the orhter hand proteins that are DOWN regulated
+are colored with blue.</p>
+<pre class="r"><code>results %&gt;% 
+  select(starts_with(&quot;name&quot;) | starts_with(test)) %&gt;% 
+  filter(across(ends_with(&quot;significant&quot;))) %&gt;% 
+  arrange(across(ends_with(&quot;p.adj&quot;))) %&gt;%
+  mutate(across(2:3, format, scientific = T, digits = 2)) %&gt;%
+  dplyr::rename_with(~ tolower(gsub(paste0(test,&quot;_&quot;), &quot;&quot;, .x)), .cols = starts_with(test)) %&gt;% 
+  mutate(significant = str_to_title(significant)) %&gt;%
+  dplyr::rename(Fold.Change = ratio, Gene.name = name) %&gt;% 
+  DT::datatable(options = list(
+  columnDefs = list(list(className = &#39;dt-center&#39;, targets = 1:5)),
+  pageLength = 10)) %&gt;%
+  formatStyle(&#39;Fold.Change&#39;, backgroundColor = styleInterval(c(-1, 1), c(&#39;lightblue&#39;, &#39;white&#39;, &#39;tomato&#39;))) %&gt;% 
+  formatStyle(&#39;significant&#39;, color = styleEqual(c(&quot;True&quot;, &quot;False&quot;), c(&#39;green&#39;, &#39;red&#39;)))</code></pre>
+<div id="htmlwidget-d42468d86de4a421697d" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-d42468d86de4a421697d">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212","213","214","215","216","217","218","219","220","221","222","223","224","225","226","227","228","229","230","231","232","233","234","235","236","237","238","239","240","241","242","243","244","245","246","247","248","249","250","251","252","253","254","255","256","257","258","259","260","261","262"],["INO80E","NUTF2","DCAF13","TIMP1","CCDC59","TNFRSF10D","ATP6V1H","GPC6","URB1","UTP11L","RHOC","SLC38A2","TIMP2","FXR2","KRR1","MEX3C","SAP30BP","SELH","LRP8","STRBP","UTP6","ZCCHC7","YBX2","NOL11","DDX10","DGCR8","C15orf52","CPSF4","FAM98A","IGFBP3","DYNLL2","EIF4E","NOC3L","VWA1","PAWR","SETD2","SP3","PAX8","MEPCE","MRPL51","YTHDC2","IGFBP6","MTHFSD","TFB2M","TRMT1L","RBM5","PRRC2B","HNRNPLL","IL6ST","PUM1.1","CHMP1A","C9orf114","FRAS1","PNO1","PALLD","NUP50","RBMXL1","NSA2","CHST3","TRIP13","NRP1","COL1A1","CNN2","IGF2BP3","MICA","DNAJC5","NOP9","DDX47","PHLDB1","SNRPB2","SP100","UBAP2","CENPF","ZFC3H1","MRPS35","NGDN","EIF4ENIF1","PCBD1","KIAA0020","HCCS","TNRC6B","ANKRD17","OTUD4","PSMA2","UHRF1","WDR46","ADAMTS1","CHAMP1","FAM208A","CLUH","AXL","MAP7D1","C5orf24","AP3S1","DRG1","SLC25A24","NUSAP1","ZCCHC8","LGMN","AHCTF1","BPTF","MDN1","POLR1E","RFC1","MRPS9","RACGAP1","ZC3H14","BMS1","PTPRA","UPF1","RBM47","MEX3D","HSPG2","MET","DNAJC10","PPIE","ZC3H7B","LAMA3","PDCD11","NID2","NDC80","ITGB4","RRP36","DDX27","ANXA7","RBM28","KIF23","UTP20","PRRC2C","TCERG1","DDX56","CFL2","RPL7L1","APP","SRP72","GLG1","NUFIP2","UTP14A","DDX54","PPAN","HNRNPM","ZC3H4","LAMA5","PRKDC","PLAU","RAB8A","RANBP1","HDLBP","UTP3","XRCC5","CAPRIN1","NIFK","PTBP3","TMSB10","BYSL","ZFR","COL18A1","LAMB3","NONO","RRS1","S100A6","SFPQ","UBAP2L","FTSJ3","DDX52","CYR61","MYO1B","PSPC1","SURF6","RBM7","LAMC1","APLP2","UTP15","EPS15","RBM10","STAM","NOP14","PPP1R10","TMSB4X","PUM1","YTHDF2","RBM19","RBM15B","ANXA3","GSTP1","XRN2","CEP170","QKI","FSTL1","RPL7A","CSTF2T","NUP153","TPM3.1","CSTF2","VCAN","ZNF638","PTPRF","WDR75","DDX24","PSMD3","EIF5A","DDX5","PPIA","ZNF622","PWP2","PRPF8","PTGES3","LOXL2","RPS5","LARP4","SYNE1","PHB2","PURB","ZC3H7A","ANXA5","SUGP2","HIRIP3","LAMC2","RSL1D1","MCM7","MYEF2","CHERP","DDX6","RBM6","CCAR2","UBE2V2","SPEN","POP1","SND1","DDX17","RBM22","UBXN1","RPS27","KPNA4","ARHGDIA","NSUN5","WWC2","YLPM1","AHCY","NUP133","TMEM43","RPL10A","COIL","RRP1","SET","GNL2","TAGLN2","EBNA1BP2","EEF1B2","MYBBP1A","SART3","HMGB1","TPT1","AGRN","GRPEL1","SPATS2L","CLIC4","PSMD6","IGFBP7","SOD1","ATL3","TBCA"],["3.7e-11","8.0e-11","1.7e-10","1.5e-10","2.4e-10","3.7e-10","6.2e-10","6.6e-10","6.7e-10","5.5e-10","7.8e-10","9.9e-10","1.2e-09","1.3e-09","1.7e-09","1.8e-09","1.9e-09","1.8e-09","2.3e-09","2.4e-09","2.3e-09","2.4e-09","2.6e-09","2.8e-09","3.1e-09","3.1e-09","4.1e-09","4.1e-09","4.6e-09","4.9e-09","5.7e-09","5.3e-09","5.6e-09","6.2e-09","7.0e-09","6.9e-09","7.1e-09","7.8e-09","8.4e-09","8.9e-09","1.0e-08","1.2e-08","1.1e-08","1.2e-08","1.1e-08","1.6e-08","1.8e-08","1.9e-08","2.1e-08","2.2e-08","2.8e-08","2.9e-08","3.4e-08","4.0e-08","4.3e-08","4.5e-08","5.1e-08","5.3e-08","6.0e-08","6.2e-08","7.8e-08","9.8e-08","1.0e-07","1.0e-07","1.0e-07","1.2e-07","1.2e-07","1.4e-07","1.4e-07","1.5e-07","1.5e-07","1.9e-07","2.7e-07","2.7e-07","2.9e-07","2.8e-07","3.1e-07","3.4e-07","3.6e-07","3.7e-07","3.7e-07","4.2e-07","4.6e-07","5.3e-07","6.5e-07","6.8e-07","8.7e-07","8.8e-07","9.5e-07","1.1e-06","1.2e-06","1.2e-06","1.2e-06","1.5e-06","1.7e-06","2.4e-06","2.8e-06","3.0e-06","3.2e-06","3.6e-06","4.8e-06","5.2e-06","6.1e-06","6.2e-06","6.7e-06","7.0e-06","9.2e-06","9.5e-06","1.0e-05","1.1e-05","1.7e-05","1.8e-05","2.0e-05","2.1e-05","2.7e-05","3.5e-05","3.7e-05","3.9e-05","3.9e-05","4.5e-05","5.0e-05","5.1e-05","5.9e-05","6.1e-05","6.4e-05","8.0e-05","1.3e-04","1.3e-04","1.3e-04","1.4e-04","1.4e-04","1.6e-04","1.6e-04","1.7e-04","1.8e-04","2.0e-04","2.0e-04","2.0e-04","2.1e-04","2.1e-04","2.6e-04","2.7e-04","3.1e-04","3.3e-04","3.7e-04","3.8e-04","4.3e-04","4.4e-04","5.1e-04","5.5e-04","5.7e-04","5.7e-04","5.8e-04","6.0e-04","6.4e-04","6.5e-04","6.6e-04","7.8e-04","7.9e-04","7.8e-04","7.9e-04","8.0e-04","8.2e-04","8.3e-04","8.3e-04","8.4e-04","8.4e-04","8.6e-04","8.8e-04","8.9e-04","9.1e-04","9.5e-04","1.0e-03","1.0e-03","1.1e-03","1.1e-03","1.1e-03","1.1e-03","1.1e-03","1.2e-03","1.2e-03","1.2e-03","1.3e-03","1.4e-03","1.4e-03","1.4e-03","1.4e-03","1.4e-03","1.5e-03","1.5e-03","1.6e-03","1.8e-03","1.8e-03","1.9e-03","1.9e-03","1.9e-03","2.0e-03","2.0e-03","2.1e-03","2.1e-03","2.2e-03","2.2e-03","2.2e-03","2.4e-03","2.4e-03","2.6e-03","2.8e-03","2.8e-03","2.8e-03","3.2e-03","3.2e-03","3.3e-03","3.3e-03","3.4e-03","3.4e-03","3.4e-03","3.5e-03","3.6e-03","3.6e-03","3.6e-03","3.7e-03","3.8e-03","3.9e-03","4.2e-03","4.3e-03","4.3e-03","4.4e-03","4.5e-03","4.7e-03","4.9e-03","5.0e-03","5.0e-03","5.2e-03","5.3e-03","5.4e-03","5.4e-03","5.4e-03","5.5e-03","5.6e-03","5.6e-03","5.7e-03","5.8e-03","5.9e-03","6.0e-03","6.1e-03","6.3e-03","6.3e-03","6.6e-03","6.6e-03","6.5e-03","6.7e-03","7.1e-03","7.3e-03","7.4e-03","7.4e-03","7.6e-03","7.9e-03","8.0e-03","8.1e-03","8.2e-03","8.2e-03","8.4e-03"],["5.6e-08","6.1e-08","6.6e-08","6.6e-08","7.4e-08","9.5e-08","1.0e-07","1.0e-07","1.0e-07","1.0e-07","1.1e-07","1.3e-07","1.4e-07","1.4e-07","1.6e-07","1.6e-07","1.6e-07","1.6e-07","1.7e-07","1.7e-07","1.7e-07","1.7e-07","1.7e-07","1.8e-07","1.8e-07","1.8e-07","2.2e-07","2.2e-07","2.4e-07","2.5e-07","2.6e-07","2.6e-07","2.6e-07","2.8e-07","2.9e-07","2.9e-07","2.9e-07","3.1e-07","3.3e-07","3.4e-07","3.8e-07","4.0e-07","4.0e-07","4.0e-07","4.0e-07","5.4e-07","5.7e-07","6.1e-07","6.6e-07","6.7e-07","8.3e-07","8.6e-07","9.8e-07","1.1e-06","1.2e-06","1.2e-06","1.4e-06","1.4e-06","1.6e-06","1.6e-06","1.9e-06","2.4e-06","2.5e-06","2.5e-06","2.5e-06","2.7e-06","2.8e-06","3.0e-06","3.1e-06","3.3e-06","3.3e-06","4.1e-06","5.6e-06","5.6e-06","5.7e-06","5.7e-06","6.1e-06","6.7e-06","6.9e-06","7.0e-06","7.0e-06","7.7e-06","8.4e-06","9.7e-06","1.2e-05","1.2e-05","1.5e-05","1.5e-05","1.6e-05","1.9e-05","2.0e-05","2.0e-05","2.0e-05","2.4e-05","2.7e-05","3.9e-05","4.3e-05","4.7e-05","4.9e-05","5.6e-05","7.2e-05","7.7e-05","9.1e-05","9.1e-05","9.7e-05","1.0e-04","1.3e-04","1.4e-04","1.4e-04","1.5e-04","2.3e-04","2.5e-04","2.6e-04","2.8e-04","3.6e-04","4.6e-04","4.7e-04","5.0e-04","5.0e-04","5.7e-04","6.2e-04","6.4e-04","7.3e-04","7.5e-04","7.8e-04","9.7e-04","1.6e-03","1.6e-03","1.6e-03","1.6e-03","1.6e-03","1.8e-03","1.8e-03","1.9e-03","2.0e-03","2.2e-03","2.2e-03","2.2e-03","2.3e-03","2.3e-03","2.8e-03","2.9e-03","3.3e-03","3.5e-03","3.9e-03","4.0e-03","4.4e-03","4.5e-03","5.2e-03","5.6e-03","5.7e-03","5.7e-03","5.8e-03","5.9e-03","6.3e-03","6.3e-03","6.4e-03","7.5e-03","7.5e-03","7.5e-03","7.5e-03","7.5e-03","7.7e-03","7.7e-03","7.7e-03","7.7e-03","7.7e-03","7.8e-03","7.9e-03","7.9e-03","8.1e-03","8.4e-03","9.1e-03","9.2e-03","9.3e-03","9.3e-03","9.6e-03","9.8e-03","9.8e-03","1.0e-02","1.0e-02","1.0e-02","1.1e-02","1.1e-02","1.1e-02","1.2e-02","1.2e-02","1.2e-02","1.2e-02","1.2e-02","1.3e-02","1.4e-02","1.5e-02","1.5e-02","1.5e-02","1.5e-02","1.5e-02","1.5e-02","1.6e-02","1.6e-02","1.6e-02","1.6e-02","1.6e-02","1.8e-02","1.8e-02","1.9e-02","2.0e-02","2.0e-02","2.1e-02","2.3e-02","2.3e-02","2.4e-02","2.4e-02","2.4e-02","2.4e-02","2.4e-02","2.4e-02","2.5e-02","2.5e-02","2.5e-02","2.6e-02","2.6e-02","2.6e-02","2.8e-02","2.9e-02","2.9e-02","2.9e-02","3.0e-02","3.1e-02","3.2e-02","3.2e-02","3.3e-02","3.3e-02","3.4e-02","3.4e-02","3.4e-02","3.4e-02","3.4e-02","3.5e-02","3.5e-02","3.6e-02","3.6e-02","3.6e-02","3.7e-02","3.7e-02","3.8e-02","3.8e-02","3.9e-02","3.9e-02","3.9e-02","4.0e-02","4.2e-02","4.3e-02","4.3e-02","4.3e-02","4.4e-02","4.6e-02","4.6e-02","4.6e-02","4.7e-02","4.7e-02","4.8e-02"],["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"],[8.29,9.18,-7.96,-8.3,-7.43,7.6,6.16,-7.47,-6.45,-6.87,-7.5,-8.48,-7.61,-5.86,-6.81,-6.25,-5.97,6.41,-7.91,-8.37,-6.04,-6.14,-6,-6.56,-7.62,-6.22,-7.01,-5.66,-6.81,-7.65,-5.73,-4.89,-6.78,-6.44,-6.06,-5.06,-5.17,-6.99,-6.53,-4.79,-5.35,-7.63,-5.43,-4.89,-5.34,-6.24,-5.39,-7.73,-6.24,-6.82,-5.88,-6.26,-5.33,-6.15,-4.57,4.4,-5.36,-6.77,-5.9,3.87,-7.25,-7.41,-6.58,-6.72,-6.41,-5.04,-6.02,-5.08,-4.72,-5.83,-7.67,-3.74,-4.07,-4.92,-4.79,-4.95,-6.77,5.45,-7.51,-3.13,-5.57,-3.2,-5.87,3.53,-5.15,-5.58,-5.67,-4.96,-6.06,-3.69,-5.8,-4.01,-6.36,-5.49,-5.52,-3.6,-3.41,-7.37,-5.27,-4.6,-6.72,-4.66,-3.01,-3.7,-4.72,-2.82,-3.03,-3.13,-3.1,-3.2,-3.96,-7.74,-4.72,-5.74,-3.98,-2.42,-2.06,-2.69,-3.94,-5.57,-4.46,-3.23,-2.05,-2.33,-4.81,-3.29,-1.46,-2.67,-1.64,-4.46,-1.85,-2.99,-1.87,-3.37,-2.66,-2.57,-2.12,-4.08,-2.59,-1.81,-1.4,-2.8,-4.76,-2.16,-1.63,-3.25,1.94,-1.46,-1.45,-1.23,-1.29,-2.95,-1.72,1.44,-1.65,-2.05,-3.77,-1.64,-1.37,-2.47,2.16,-1.49,-1.42,-2.82,-2.18,-1.6,-2.53,-2.37,-2.26,-1.78,-2.01,-3.78,-2.48,-1.64,-2.59,2,-2.19,-2.35,1.1,-1.43,-1.28,-2.72,-2.01,2.23,1.4,-2.45,-2.63,-2,-2.14,1.24,-2.47,-3.46,1.15,-1.71,-3.54,-2.87,-2.9,-2.51,-2.55,1.54,1.12,-1.1,1.26,1.31,-1.74,-1.03,1.29,-2.17,-1.85,-1.99,-1.64,1.17,-1.14,-1.75,2.43,-2.07,1.42,-2.02,-2.83,1.63,-1.21,-2.17,-1.98,-2.29,-2.94,1.12,-1.96,-2.25,-1.35,-1.11,-1.69,1.51,-1.18,-1.08,1.2,-1.47,1.24,-2.38,1.19,1.75,1.06,-1.31,-2.12,-2.06,1.93,-2.59,2.88,-1.08,1.3,-1.84,-2.39,1.34,3.09,-3.87,1.29,-1.3,1.25,2.29,-2.01,1.21,1.06,1.69]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Gene.name<\/th>\n      <th>p.val<\/th>\n      <th>p.adj<\/th>\n      <th>significant<\/th>\n      <th>Fold.Change<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-center","targets":[1,2,3,4,5]},{"orderable":false,"targets":0}],"pageLength":10,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[5]; $(this.api().cell(row, 5).node()).css({'background-color':isNaN(parseFloat(value)) ? '' : value <= -1 ? \"lightblue\" : value <= 1 ? \"white\" : \"tomato\"});\nvar value=data[4]; $(this.api().cell(row, 4).node()).css({'color':value == \"True\" ? \"green\" : value == \"False\" ? \"red\" : null});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+</div>
+</div>
+<div id="gene-ontology" class="section level2">
+<h2><strong>5. Gene Ontology</strong></h2>
+<p>Now I perfom a gene onology analysis (GO or by branch <a href="GO:MF"
+class="uri">GO:MF</a>, <a href="GO:BP" class="uri">GO:BP</a>, <a
+href="GO:CC" class="uri">GO:CC</a>) and a KEGG ontology.<br />
+The enrichment results are visualized with an interactive
+<strong>Manhattan-like-plot</strong> named “Gostplot”.</p>
+<div id="oops_cddp-1" class="section level3 tabset tabset-fade">
+<h3 class="tabset tabset-fade"><strong>5.1. OOPS_CDDP</strong></h3>
+<div id="gostplot" class="section level4">
+<h4>Gostplot</h4>
+<p>UP regulated proteins in OOPS_CDDP were used to generate these gene
+ontologies.</p>
+<pre class="r"><code>Gname &lt;- results %&gt;% filter(significant &amp; get(paste0(test, &quot;_ratio&quot;)) &gt; 0) %&gt;% pull(name)
+
+if(!params$Imputation){
+  Uni &lt;- unique_pair(data_filt_unique, conditions = conditions, table = T) %&gt;% 
+  filter(!!sym(paste0(&quot;unique_&quot;, cond_1)) == &quot;+&quot;) %&gt;% 
+  pull(name) %&gt;% unique()
+
+  Gname &lt;- c(Gname, Uni)
+}
+
+if(length(Gname) == 0){
+  print(&quot;NOT enough data.&quot;)
+  GO &lt;- NULL
+}else{
+  GO &lt;- gost(query = Gname, organism = &quot;hsapiens&quot;, sources = c(&quot;GO:BP&quot;, &quot;GO:MF&quot;, &quot;GO:CC&quot;, &quot;KEGG&quot;), ordered_query = T, evcodes = TRUE)
+  if(is.null(GO)){
+    print(&quot;NOT enough data.&quot;)
+  }else{
+    gostplot(GO, capped = TRUE, interactive = TRUE)
+  }
+}</code></pre>
+<div id="htmlwidget-58abce2053a2454929a5" style="width:960px;height:768px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-58abce2053a2454929a5">{"x":{"data":[{"x":[134.929452198124,98.0974693564108,86.5463110511694,147.762773486639,135.712779735018,134.64496010761,134.641062955685,136.379192714166,122.220839771203,122.450771734769,85.2134850928723,122.454668886694,136.1648493583,122.462463190544,84.4964091387008],"y":[3.84205526433008,2.52716831319187,2.4946855560147,2.3237912902098,2.09365364488104,1.70142459235649,1.70142459235649,1.66994829823423,1.5576004355152,1.52381665084133,1.50707348371989,1.47165778588297,1.46536824417946,1.45657064453965,1.35821622813158],"text":["GO:0050790 (2314) <br> regulation of catalytic activity <br> 1.439e-04","GO:0017038 (214) <br> protein import <br> 2.971e-03","GO:0006996 (3805) <br> organelle organization <br> 3.201e-03","GO:0065009 (3017) <br> regulation of molecular function <br> 4.745e-03","GO:0051028 (129) <br> mRNA transport <br> 8.060e-03","GO:0050658 (162) <br> RNA transport <br> 1.989e-02","GO:0050657 (162) <br> nucleic acid transport <br> 1.989e-02","GO:0051236 (165) <br> establishment of RNA localization <br> 2.138e-02","GO:0042981 (1411) <br> regulation of apoptotic process <br> 2.769e-02","GO:0043066 (866) <br> negative regulation of apoptotic process <br> 2.994e-02","GO:0006606 (162) <br> protein import into nucleus <br> 3.111e-02","GO:0043067 (1439) <br> regulation of programmed cell death <br> 3.376e-02","GO:0051170 (166) <br> import into nucleus <br> 3.425e-02","GO:0043069 (883) <br> negative regulation of programmed cell death <br> 3.495e-02","GO:0006403 (198) <br> RNA localization <br> 4.383e-02"],"key":["GO:0050790","GO:0017038","GO:0006996","GO:0065009","GO:0051028","GO:0050658","GO:0050657","GO:0051236","GO:0042981","GO:0043066","GO:0006606","GO:0043067","GO:0051170","GO:0043069","GO:0006403"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,153,0,1)","opacity":0.8,"size":[19.8936073818447,15.7033119935304,20.6379528243256,20.2948240633315,14.6053387541107,15.1126205995671,15.1126205995671,15.1524999719398,19.1174502522993,18.3109222405749,15.1126205995671,19.149028518193,15.165601555142,18.3438944138567,15.5414070208066],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(255,153,0,1)"}},"hoveron":"points","set":"SharedDatad42468d8","name":"GO:BP","legendgroup":"GO:BP","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[55.6741209943464,55.0231723125113,69.7728119057094,64.5223455917459,69.6987518760395,64.428796080584,62.1368330571166,68.6424219791694,59.5018551593888,54.9958870384224,55.3427998089812,59.9579090263032,59.4511825075094,59.4784677815983,60.8583230712368,57.026691009896,63.9649464210727,59.5057530556872,54.9257249050509,62.1251393682214,54.7815027420096,58.0518377363789,64.4326939768824,59.4745698852999,62.1485267460118,62.140730953415,62.1212414719229,68.5644640532011,54.991989142124],"y":[6.36815059079271,5.03496852717487,4.40583646937493,4.23054413871682,4.16863062801163,4.16583442822554,4.16583442822554,3.55529645329826,3.18686024454313,2.87871825677219,2.8584992362141,2.70906309833558,2.63401073456031,2.63401073456031,2.60057074030054,2.59958585104597,2.57756706531582,2.56235843414542,2.41842263465945,2.40461247992049,1.96192653835905,1.91728306791552,1.73690626113253,1.73570523278083,1.73570523278083,1.67765156073335,1.63798508099838,1.38658071966993,1.30681793893603],"text":["GO:0005829 (5373) <br> cytosol <br> 4.284e-07","GO:0005643 (85) <br> nuclear pore <br> 9.226e-06","GO:1904813 (124) <br> ficolin-1-rich granule lumen <br> 3.928e-05","GO:0070062 (2110) <br> extracellular exosome <br> 5.881e-05","GO:1903561 (2132) <br> extracellular vesicle <br> 6.782e-05","GO:0065010 (2133) <br> extracellular membrane-bounded organelle <br> 6.826e-05","GO:0043230 (2133) <br> extracellular organelle <br> 6.826e-05","GO:0101002 (184) <br> ficolin-1-rich granule <br> 2.784e-04","GO:0031982 (3942) <br> vesicle <br> 6.503e-04","GO:0005635 (473) <br> nuclear envelope <br> 1.322e-03","GO:0005737 (12193) <br> cytoplasm <br> 1.385e-03","GO:0032991 (7228) <br> protein-containing complex <br> 1.954e-03","GO:0031967 (1245) <br> organelle envelope <br> 2.323e-03","GO:0031975 (1245) <br> envelope <br> 2.323e-03","GO:0034774 (320) <br> secretory granule lumen <br> 2.509e-03","GO:0012505 (4674) <br> endomembrane system <br> 2.514e-03","GO:0060205 (323) <br> cytoplasmic vesicle lumen <br> 2.645e-03","GO:0031983 (325) <br> vesicle lumen <br> 2.739e-03","GO:0005615 (3353) <br> extracellular space <br> 3.816e-03","GO:0043227 (15557) <br> membrane-bounded organelle <br> 3.939e-03","GO:0005576 (4303) <br> extracellular region <br> 1.092e-02","GO:0030141 (860) <br> secretory granule <br> 1.210e-02","GO:0070013 (6569) <br> intracellular organelle lumen <br> 1.833e-02","GO:0031974 (6570) <br> membrane-enclosed lumen <br> 1.838e-02","GO:0043233 (6570) <br> organelle lumen <br> 1.838e-02","GO:0043231 (14514) <br> intracellular membrane-bounded organelle <br> 2.101e-02","GO:0043226 (16674) <br> organelle <br> 2.302e-02","GO:0099503 (1025) <br> secretory vesicle <br> 4.106e-02","GO:0005634 (10053) <br> nucleus <br> 4.934e-02"],"key":["GO:0005829","GO:0005643","GO:1904813","GO:0070062","GO:1903561","GO:0065010","GO:0043230","GO:0101002","GO:0031982","GO:0005635","GO:0005737","GO:0032991","GO:0031967","GO:0031975","GO:0034774","GO:0012505","GO:0060205","GO:0031983","GO:0005615","GO:0043227","GO:0005576","GO:0030141","GO:0070013","GO:0031974","GO:0043233","GO:0043231","GO:0043226","GO:0099503","GO:0005634"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(16,150,24,1)","opacity":0.8,"size":[21.1356570834007,13.608662034228,14.514861643959,19.7516659667606,19.7676818050858,19.7684054863543,19.7684054863543,15.3865519610285,20.6896449610989,17.2448882004666,22.2639852517454,21.5522828261292,18.9147596750373,18.9147596750373,16.5086980808585,20.9363764748759,16.5267731352433,16.5387160720765,20.4518356536948,22.5864116360603,20.8170215413751,18.299112076095,21.4190590052728,21.4192719282546,21.4192719282546,22.4951426048684,22.6771653543307,18.5943772884026,22.0045474908873],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(16,150,24,1)"}},"hoveron":"points","set":"SharedDatad42468d8","name":"GO:CC","legendgroup":"GO:CC","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[7.49914789549642,39.2546808880583,9.30361669465648,20.563034320517,42.5284471759513,9.40105021512949,37.461904111355,3.74211134605734],"y":[3.38457841739372,3.12499856464843,3.02391802119971,2.82603546487217,2.69315493014817,2.06546243808907,2.00830498860024,1.61532691080931],"text":["GO:0004859 (12) <br> phospholipase inhibitor activity <br> 4.125e-04","GO:0055102 (16) <br> lipase inhibitor activity <br> 7.499e-04","GO:0005515 (14799) <br> protein binding <br> 9.464e-04","GO:0030234 (1240) <br> enzyme regulator activity <br> 1.493e-03","GO:0098772 (1962) <br> molecular function regulator <br> 2.027e-03","GO:0005544 (53) <br> calcium-dependent phospholipid binding <br> 8.601e-03","GO:0051087 (106) <br> chaperone binding <br> 9.811e-03","GO:0003746 (26) <br> translation elongation factor activity <br> 2.425e-02"],"key":["GO:0004859","GO:0055102","GO:0005515","GO:0030234","GO:0098772","GO:0005544","GO:0051087","GO:0003746"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(220,57,18,1)","opacity":0.8,"size":[3.77952755905512,7.54737801949813,22.5207621575425,18.9081978630524,19.6389222756892,12.3411646328224,14.148107365916,9.9565665334122],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(220,57,18,1)"}},"hoveron":"points","set":"SharedDatad42468d8","name":"GO:MF","legendgroup":"GO:MF","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[2,49.9528814359943],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(220,57,18,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[53.8499055266887,71.2657061880019],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(16,150,24,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[75.1627302786963,193.967406707605],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(255,153,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[197.864430798299,200.003897024091],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(221,68,119,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[180],"y":[16.2],"text":"values above this threshold are capped","hovertext":"","textfont":{"size":7.55905511811024,"color":"rgba(190,190,190,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,210],"y":[16,16],"text":"","type":"scatter","mode":"lines","line":{"width":0.755905511811024,"color":"rgba(190,190,190,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":29.2835201328352,"r":6.6417600664176,"b":51.8931100989696,"l":61.0377750103778},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0,210],"tickmode":"array","ticktext":["GO:MF","GO:CC","GO:BP","KEGG"],"tickvals":[25.9764407179972,62.5578058573453,134.565068493151,198.934163911195],"categoryorder":"array","categoryarray":["GO:MF","GO:CC","GO:BP","KEGG"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.6268161062682},"tickangle":-45,"showline":true,"linecolor":"rgba(190,190,190,1)","linewidth":0.132835201328352,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":"","hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1,18.5],"tickmode":"array","ticktext":["0","2","4","6","8","10","12","14",">16"],"tickvals":[0,2,4,6,8,10,12,14,16],"categoryorder":"array","categoryarray":["0","2","4","6","8","10","12","14",">16"],"nticks":null,"ticks":"outside","tickcolor":"rgba(190,190,190,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(190,190,190,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":"","hoverformat":".2f"},"annotations":[{"text":"-log10(p-adj)","x":0,"y":0.5,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":13.2835201328352},"xref":"paper","yref":"paper","textangle":-90,"xanchor":"right","yanchor":"center","annotationType":"axis","xshift":-37.3931091739311},{"text":"query_1","x":0.5,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(169,169,169,1)","family":"","size":13.2835201328352},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"center","yanchor":"bottom"}],"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1},{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":24.9730178497302,"yanchor":1,"ysizemode":"pixel"}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative","dragmode":"zoom"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"b6c30615bf":{"x":{},"y":{},"text":{},"colour":{},"size":{},"alpha":{},"type":"scatter"},"b6c391e48f1":{"x":{},"xend":{},"y":{},"yend":{}},"b6c38f213f":{"x":{},"xend":{},"y":{},"yend":{}},"b6c12777e74":{"x":{},"xend":{},"y":{},"yend":{}},"b6c57049c9":{"x":{},"xend":{},"y":{},"yend":{}},"b6c7c243a90":{"x":{},"y":{}},"b6c504e901":{"yintercept":{}}},"cur_data":"b6c30615bf","visdat":{"b6c30615bf":["function (y) ","x"],"b6c391e48f1":["function (y) ","x"],"b6c38f213f":["function (y) ","x"],"b6c12777e74":["function (y) ","x"],"b6c57049c9":["function (y) ","x"],"b6c7c243a90":["function (y) ","x"],"b6c504e901":["function (y) ","x"]},"highlight":{"on":"plotly_click","off":"plotly_doubleclick","persistent":false,"dynamic":false,"color":null,"selectize":false,"defaultValues":null,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0,"ctGroups":["SharedDatad42468d8"]},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="table-results" class="section level4">
+<h4>Table results</h4>
+<p>The results can also be visualized with a table:</p>
+<pre class="r"><code>if(is.null(GO)){
+  print(&quot;NOT enough data.&quot;)
+}else{
+  GO$result %&gt;% 
+    as.data.frame() %&gt;% 
+    select(starts_with(c(&quot;source&quot;, &quot;term_name&quot;, &quot;p_value&quot;, &quot;term_size&quot;, &quot;intersection_size&quot;))) %&gt;%
+    arrange(p_value) %&gt;%  
+    mutate(p_value = format(p_value, scientific = T, digits = 2)) %&gt;% 
+    DT::datatable(options = list(
+    columnDefs = list(list(className = &#39;dt-center&#39;, targets = 1:6)),
+    pageLength = 10)) %&gt;%
+    formatStyle(&#39;source&#39;, backgroundColor = styleEqual(c(&quot;GO:BP&quot;, &quot;GO:MF&quot;, &quot;GO:CC&quot;, &quot;KEGG&quot;), c(&#39;orange&#39;, &#39;tomato&#39;, &#39;lightgreen&#39;, &#39;violet&#39;)))
+}</code></pre>
+<div id="htmlwidget-6e939b13f92b78564578" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-6e939b13f92b78564578">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52"],["GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:BP","GO:CC","GO:MF","GO:CC","GO:MF","GO:MF","GO:CC","GO:CC","GO:MF","GO:CC","GO:MF","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:BP","GO:MF","GO:MF","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:BP","GO:BP","GO:CC","GO:BP","GO:CC","GO:MF","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:BP","GO:CC"],[469,302,4086,2739,4067,2715,2127,15337,3796,1412,1451,9560,1875,295,384,4764,1568,10400,1438,1445,1799,816,2596,1452,5886,2922,277,2124,18630,15538,1900,9100,240,1079,2716,1444,2130,15264,15263,2128,15709,2123,448,12076,12135,2580,12136,15654,12138,3776,2396,294],["cytosol","nuclear pore","ficolin-1-rich granule lumen","extracellular exosome","extracellular vesicle","extracellular membrane-bounded organelle","extracellular organelle","regulation of catalytic activity","ficolin-1-rich granule","phospholipase inhibitor activity","vesicle","lipase inhibitor activity","protein binding","nuclear envelope","cytoplasm","enzyme regulator activity","protein-containing complex","molecular function regulator","organelle envelope","envelope","secretory granule lumen","endomembrane system","cytoplasmic vesicle lumen","vesicle lumen","protein import","organelle organization","extracellular space","membrane-bounded organelle","regulation of molecular function","mRNA transport","calcium-dependent phospholipid binding","chaperone binding","extracellular region","secretory granule","intracellular organelle lumen","membrane-enclosed lumen","organelle lumen","RNA transport","nucleic acid transport","intracellular membrane-bounded organelle","establishment of RNA localization","organelle","translation elongation factor activity","regulation of apoptotic process","negative regulation of apoptotic process","protein import into nucleus","regulation of programmed cell death","import into nucleus","negative regulation of programmed cell death","secretory vesicle","RNA localization","nucleus"],["4.3e-07","9.2e-06","3.9e-05","5.9e-05","6.8e-05","6.8e-05","6.8e-05","1.4e-04","2.8e-04","4.1e-04","6.5e-04","7.5e-04","9.5e-04","1.3e-03","1.4e-03","1.5e-03","2.0e-03","2.0e-03","2.3e-03","2.3e-03","2.5e-03","2.5e-03","2.6e-03","2.7e-03","3.0e-03","3.2e-03","3.8e-03","3.9e-03","4.7e-03","8.1e-03","8.6e-03","9.8e-03","1.1e-02","1.2e-02","1.8e-02","1.8e-02","1.8e-02","2.0e-02","2.0e-02","2.1e-02","2.1e-02","2.3e-02","2.4e-02","2.8e-02","3.0e-02","3.1e-02","3.4e-02","3.4e-02","3.5e-02","4.1e-02","4.4e-02","4.9e-02"],[5373,85,124,2110,2132,2133,2133,2314,184,12,3942,16,14799,473,12193,1240,7228,1962,1245,1245,320,4674,323,325,214,3805,3353,15557,3017,129,53,106,4303,860,6569,6570,6570,162,162,14514,165,16674,26,1411,866,162,1439,166,883,1025,198,10053],[29,5,5,16,16,16,16,15,5,2,20,2,42,7,32,10,22,12,10,10,6,22,6,6,5,19,15,33,15,4,2,4,19,8,25,25,25,4,4,29,4,35,2,12,9,4,12,4,9,8,4,30]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>source<\/th>\n      <th>source_order<\/th>\n      <th>term_name<\/th>\n      <th>p_value<\/th>\n      <th>term_size<\/th>\n      <th>intersection_size<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-center","targets":[1,2,3,4,5,6]},{"orderable":false,"targets":0}],"pageLength":10,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'background-color':value == \"GO:BP\" ? \"orange\" : value == \"GO:MF\" ? \"tomato\" : value == \"GO:CC\" ? \"lightgreen\" : value == \"KEGG\" ? \"violet\" : null});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+</div>
+<div id="treemap" class="section level4 tabset tabset-fade">
+<h4 class="tabset tabset-fade">Treemap</h4>
+<div id="bp" class="section level5">
+<h5>BP</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:BP&quot;) &gt;= 5 &amp; !is.null(GO)){
+  simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:BP&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;BP&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+BP &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  BP &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/BP-cond1-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="mf" class="section level5">
+<h5>MF</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:MF&quot;) &gt;= 5 &amp; !is.null(GO)){
+simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:MF&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;MF&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+MF &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  MF &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/MF-cond1-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="cc" class="section level5">
+<h5>CC</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:CC&quot;) &gt;= 5 &amp; !is.null(GO)){
+simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:CC&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;CC&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+CC &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  CC &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/CC-cond1-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="scatterplot" class="section level4">
+<h4>ScatterPlot</h4>
+<pre class="r"><code>if(BP | MF | CC){
+scatterPlot(simMatrix, reducedTerms, size = &quot;score&quot;, labelSize = 5)
+}else{
+  print(&quot;NOT enough data.&quot;)
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/scatter-cond1-1.png" width="1440" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="oops_nt-1" class="section level3 tabset tabset-fade">
+<h3 class="tabset tabset-fade"><strong>5.2. OOPS_NT</strong></h3>
+<div id="gostplot-1" class="section level4">
+<h4>Gostplot</h4>
+<p>UP regulated proteins in OOPS_NT were used to generate these gene
+ontologies.</p>
+<pre class="r"><code>Gname &lt;- results %&gt;% filter(significant &amp; get(paste0(test, &quot;_ratio&quot;)) &lt; 0) %&gt;% pull(name)
+
+if(!params$Imputation){
+  Uni &lt;- unique_pair(data_filt_unique, conditions = conditions, table = T) %&gt;% 
+  filter(!!sym(paste0(&quot;unique_&quot;, cond_2)) == &quot;+&quot;) %&gt;% 
+  pull(name) %&gt;% unique()
+
+  Gname &lt;- c(Gname, Uni)
+}
+
+if(length(Gname) == 0){
+  print(&quot;NOT enough data.&quot;)
+  GO &lt;- NULL
+}else{
+  GO &lt;- gost(query = Gname, organism = &quot;hsapiens&quot;, sources = c(&quot;GO:BP&quot;, &quot;GO:MF&quot;, &quot;GO:CC&quot;, &quot;KEGG&quot;), ordered_query = T, evcodes = TRUE)
+  if(is.null(GO)){
+    print(&quot;NOT enough data.&quot;)
+  }else{
+    gostplot(GO, capped = TRUE, interactive = TRUE)
+  }
+}</code></pre>
+<div id="htmlwidget-27ab1876f7c57926b229" style="width:960px;height:768px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-27ab1876f7c57926b229">{"x":{"data":[{"x":[120.53727013967,84.3678031251809,97.2712731483436,113.919906171283,114.208295413721,120.591830266618,105.856698838778,75.9616464232896,84.4691290752268,120.587933114693,97.2634788444939,104.820056426769,158.304569443346,123.370499589033,124.414936304891,93.2805895773021,152.232806744437,75.9538521194399,83.5922698921366,177.97349520804,114.157632438698,165.615626454356,75.9928236386883,130.397064509529,171.293776808855,75.7784802828218,85.6577604123047,84.4886148348511,158.885245080148,84.5431749617989,131.722096163976,75.9772350309889,113.37040774988,84.5275863540995,120.541167291595,75.9889264867635,91.5658427303701,76.0278980060119,76.0240008540871,122.368931544347,84.4925119867759,75.7823774347467,75.2172904056441,134.711211690332,75.9031891444169,161.367730856274,98.1403380275841,123.658888831471,134.937246501973,161.363833704349,134.286422130524,97.8480516332207,189.509064905582,91.5619455784453,105.252640290427,114.196603957947,123.386088196732,151.901548830825,134.290319282449,137.688635760914,135.989477521682,144.442400046671,113.374304901804,134.239656307426,84.414568948279,123.382191044807,173.57361068489,93.5183158447176,93.5416987562667,107.037535872006,103.3975959742,191.500509539178,122.688498002185,128.366648356684,130.962151538631,97.2673759964188,141.262324075997,84.8783300273356,124.718914155029,127.867812910304,86.3358648472277,76.4955562369934,76.000617942538,75.9655435752144,173.561919229115,107.380485241392,101.195705136663,136.15705505445,136.172643662149,119.859165704747,158.308466595271,158.889142232073,91.5736370342198,173.554124925265,105.338377632773,85.9344581989687,122.43518312707,126.644107205903,107.879320687773,157.435504564105,93.2844867292269,90.837075320424,109.508330192358,104.710936172873,100.400686143994,171.29767396078,166.500279941295,136.429855689189,192.163025366402,186.219868681013,186.227662984862,87.5050104246813,107.368793785618,76.3396701599995,76.0317951579368],"y":[17,17,17,17,17,17,15.2661767745431,13.8964344935171,12.5669512888281,8.54148273117859,8.15713457804435,8.14419851039008,7.44324764858021,6.44627447284426,6.08080424281474,5.9470507035943,5.82291913922651,5.78036406936152,5.535325537599,5.44673220226154,5.35498657853651,5.18361649708882,5.0327662314012,4.93503902834542,4.91170921531095,4.73578889405378,4.71532540294868,4.66664913274701,4.31211487587087,4.10664264689863,3.98317509628223,3.9744868879959,3.93921426343541,3.76341161227742,3.75353206837734,3.64194837117074,3.61627919862355,3.54134489625923,3.54134489625923,3.48838970198627,3.33656058654672,3.3310589899991,3.01730932362294,2.88410174954695,2.84653124946533,2.81787986599142,2.80114531502095,2.7825317491304,2.7228569325658,2.71357836495923,2.66841754233695,2.64609374264284,2.58705658239169,2.55569975593263,2.53975312187907,2.53520953543264,2.4917051664169,2.44002942343963,2.41720873887969,2.41720873887969,2.30801615923582,2.28985024653901,2.28896854837704,2.26081029419763,2.22037773069302,2.20371688968433,2.18618207872229,2.15811791182176,2.15142602367192,2.13950278797165,2.10634357813212,2.09201369035368,2.06551964071356,2.05007459710488,2.04798109901312,2.03870955184226,2.01584359797623,2.01533551811903,1.9757814078464,1.9485472450006,1.91726150332508,1.88410720198417,1.88410720198417,1.85761392626838,1.84865679827313,1.80946862704004,1.80046207809276,1.76884109439507,1.76617173407308,1.72620688262602,1.71210992167493,1.70271780915856,1.64299645085301,1.61649849677244,1.60906886241629,1.60425428503897,1.59746771630341,1.57439278461318,1.56932781332076,1.56429311576074,1.53048490230146,1.52836714540187,1.52674119617343,1.51519672540428,1.51071650089967,1.49171260007915,1.47631921894805,1.47108266894595,1.4271588902882,1.4091703261674,1.4091703261674,1.38193727707163,1.38058780331079,1.35754676855834,1.34581522144773],"text":["GO:0042254 (302) <br> ribosome biogenesis <br> 3.396e-40","GO:0006364 (225) <br> rRNA processing <br> 5.426e-39","GO:0016072 (263) <br> rRNA metabolic process <br> 2.121e-37","GO:0034470 (399) <br> ncRNA processing <br> 1.552e-32","GO:0034660 (536) <br> ncRNA metabolic process <br> 3.360e-31","GO:0042274 (73) <br> ribosomal small subunit biogenesis <br> 4.713e-21","GO:0030490 (50) <br> maturation of SSU-rRNA <br> 5.418e-16","GO:0000462 (37) <br> maturation of SSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 1.269e-14","GO:0006396 (3356) <br> RNA processing <br> 2.710e-13","GO:0042273 (72) <br> ribosomal large subunit biogenesis <br> 2.874e-09","GO:0016070 (6948) <br> RNA metabolic process <br> 6.964e-09","GO:0022613 (1870) <br> ribonucleoprotein complex biogenesis <br> 7.175e-09","GO:0090304 (7476) <br> nucleic acid metabolic process <br> 3.604e-08","GO:0043484 (151) <br> regulation of RNA splicing <br> 3.579e-07","GO:0044085 (4801) <br> cellular component biogenesis <br> 8.302e-07","GO:0010467 (8909) <br> gene expression <br> 1.130e-06","GO:0071840 (7994) <br> cellular component organization or biogenesis <br> 1.503e-06","GO:0000460 (36) <br> maturation of 5.8S rRNA <br> 1.658e-06","GO:0006139 (7940) <br> nucleobase-containing compound metabolic process <br> 2.915e-06","GO:1903311 (318) <br> regulation of mRNA metabolic process <br> 3.575e-06","GO:0034641 (8767) <br> cellular nitrogen compound metabolic process <br> 4.416e-06","GO:0140694 (373) <br> non-membrane-bounded organelle assembly <br> 6.552e-06","GO:0000470 (29) <br> maturation of LSU-rRNA <br> 9.273e-06","GO:0046483 (8099) <br> heterocycle metabolic process <br> 1.161e-05","GO:1901360 (8395) <br> organic cyclic compound metabolic process <br> 1.225e-05","GO:0000380 (79) <br> alternative mRNA splicing, via spliceosome <br> 1.837e-05","GO:0006725 (8159) <br> cellular aromatic compound metabolic process <br> 1.926e-05","GO:0006401 (308) <br> RNA catabolic process <br> 2.155e-05","GO:0090501 (155) <br> RNA phosphodiester bond hydrolysis <br> 4.874e-05","GO:0006417 (390) <br> regulation of translation <br> 7.823e-05","GO:0048024 (105) <br> regulation of mRNA splicing, via spliceosome <br> 1.040e-04","GO:0000466 (24) <br> maturation of 5.8S rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 1.061e-04","GO:0034248 (446) <br> regulation of cellular amide metabolic process <br> 1.150e-04","GO:0006412 (713) <br> translation <br> 1.724e-04","GO:0042255 (61) <br> ribosome assembly <br> 1.764e-04","GO:0000469 (27) <br> cleavage involved in rRNA processing <br> 2.281e-04","GO:0009888 (1912) <br> tissue development <br> 2.419e-04","GO:0000479 (15) <br> endonucleolytic cleavage of tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 2.875e-04","GO:0000478 (15) <br> endonucleolytic cleavage involved in rRNA processing <br> 2.875e-04","GO:0043043 (738) <br> peptide biosynthetic process <br> 3.248e-04","GO:0006402 (261) <br> mRNA catabolic process <br> 4.607e-04","GO:0000381 (62) <br> regulation of alternative mRNA splicing, via spliceosome <br> 4.666e-04","GO:0000028 (18) <br> ribosomal small subunit assembly <br> 9.609e-04","GO:0050684 (141) <br> regulation of mRNA processing <br> 1.306e-03","GO:0000447 (9) <br> endonucleolytic cleavage in ITS1 to separate SSU-rRNA from 5.8S rRNA and LSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 1.424e-03","GO:0098789 (13) <br> pre-mRNA cleavage required for polyadenylation <br> 1.521e-03","GO:0017148 (172) <br> negative regulation of translation <br> 1.581e-03","GO:0043604 (867) <br> amide biosynthetic process <br> 1.650e-03","GO:0050793 (2421) <br> regulation of developmental process <br> 1.893e-03","GO:0098787 (14) <br> mRNA cleavage involved in mRNA processing <br> 1.934e-03","GO:0048869 (4210) <br> cellular developmental process <br> 2.146e-03","GO:0016477 (1454) <br> cell migration <br> 2.259e-03","GO:2000112 (656) <br> regulation of cellular macromolecule biosynthetic process <br> 2.588e-03","GO:0009887 (1066) <br> animal organ morphogenesis <br> 2.782e-03","GO:0030154 (4128) <br> cell differentiation <br> 2.886e-03","GO:0034655 (435) <br> nucleobase-containing compound catabolic process <br> 2.916e-03","GO:0043488 (184) <br> regulation of mRNA stability <br> 3.223e-03","GO:0071695 (239) <br> anatomical structure maturation <br> 3.631e-03","GO:0048870 (1645) <br> cell motility <br> 3.826e-03","GO:0051674 (1645) <br> localization of cell <br> 3.826e-03","GO:0051124 (7) <br> synaptic assembly at neuromuscular junction <br> 4.920e-03","GO:0061013 (193) <br> regulation of mRNA catabolic process <br> 5.130e-03","GO:0034249 (194) <br> negative regulation of cellular amide metabolic process <br> 5.141e-03","GO:0048856 (5718) <br> anatomical structure development <br> 5.485e-03","GO:0006379 (20) <br> mRNA cleavage <br> 6.020e-03","GO:0043487 (197) <br> regulation of RNA stability <br> 6.256e-03","GO:1901992 (85) <br> positive regulation of mitotic cell cycle phase transition <br> 6.514e-03","GO:0010558 (1523) <br> negative regulation of macromolecule biosynthetic process <br> 6.948e-03","GO:0010564 (675) <br> regulation of cell cycle process <br> 7.056e-03","GO:0031124 (73) <br> mRNA 3'-end processing <br> 7.253e-03","GO:0021700 (290) <br> developmental maturation <br> 7.828e-03","GO:2000637 (29) <br> positive regulation of gene silencing by miRNA <br> 8.091e-03","GO:0043170 (12328) <br> macromolecule metabolic process <br> 8.600e-03","GO:0045931 (113) <br> positive regulation of mitotic cell cycle <br> 8.911e-03","GO:0046700 (473) <br> heterocycle catabolic process <br> 8.954e-03","GO:0016071 (2153) <br> mRNA metabolic process <br> 9.147e-03","GO:0060148 (30) <br> positive regulation of posttranscriptional gene silencing <br> 9.642e-03","GO:0006518 (895) <br> peptide metabolic process <br> 9.653e-03","GO:0044270 (479) <br> cellular nitrogen compound catabolic process <br> 1.057e-02","GO:0045787 (314) <br> positive regulation of cell cycle <br> 1.126e-02","GO:0006928 (2074) <br> movement of cell or subcellular component <br> 1.210e-02","GO:0000967 (5) <br> rRNA 5'-end processing <br> 1.306e-02","GO:0000472 (5) <br> endonucleolytic cleavage to generate mature 5'-end of SSU-rRNA from (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 1.306e-02","GO:0000463 (15) <br> maturation of LSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 1.388e-02","GO:1901989 (110) <br> positive regulation of cell cycle phase transition <br> 1.417e-02","GO:0031327 (1581) <br> negative regulation of cellular biosynthetic process <br> 1.551e-02","GO:0019439 (494) <br> aromatic compound catabolic process <br> 1.583e-02","GO:0051168 (154) <br> nuclear export <br> 1.703e-02","GO:0051172 (2330) <br> negative regulation of nitrogen compound metabolic process <br> 1.713e-02","GO:0040011 (1821) <br> locomotion <br> 1.878e-02","GO:0090305 (272) <br> nucleic acid phosphodiester bond hydrolysis <br> 1.940e-02","GO:0090502 (84) <br> RNA phosphodiester bond hydrolysis, endonucleolytic <br> 1.983e-02","GO:0009890 (1610) <br> negative regulation of biosynthetic process <br> 2.275e-02","GO:1901987 (404) <br> regulation of cell cycle phase transition <br> 2.418e-02","GO:0030198 (323) <br> extracellular matrix organization <br> 2.460e-02","GO:0006807 (12062) <br> nitrogen compound metabolic process <br> 2.487e-02","GO:0043062 (324) <br> extracellular structure organization <br> 2.527e-02","GO:0045229 (326) <br> external encapsulating structure organization <br> 2.664e-02","GO:0031589 (356) <br> cell-substrate adhesion <br> 2.696e-02","GO:0090068 (235) <br> positive regulation of cell cycle process <br> 2.727e-02","GO:0010468 (5388) <br> regulation of gene expression <br> 2.948e-02","GO:0009653 (2685) <br> anatomical structure morphogenesis <br> 2.962e-02","GO:0032502 (6326) <br> developmental process <br> 2.973e-02","GO:0022402 (1194) <br> cell cycle process <br> 3.054e-02","GO:0019219 (3945) <br> regulation of nucleobase-containing compound metabolic process <br> 3.085e-02","GO:1901361 (522) <br> organic cyclic compound catabolic process <br> 3.223e-02","GO:1900087 (37) <br> positive regulation of G1/S transition of mitotic cell cycle <br> 3.339e-02","GO:0051252 (3700) <br> regulation of RNA metabolic process <br> 3.380e-02","GO:2000815 (2) <br> regulation of mRNA stability involved in response to oxidative stress <br> 3.740e-02","GO:1905616 (7) <br> regulation of miRNA-mediated gene silencing by inhibition of translation <br> 3.898e-02","GO:1905618 (7) <br> positive regulation of miRNA-mediated gene silencing by inhibition of translation <br> 3.898e-02","GO:0007275 (5114) <br> multicellular organism development <br> 4.150e-02","GO:0031324 (2493) <br> negative regulation of cellular metabolic process <br> 4.163e-02","GO:0000819 (198) <br> sister chromatid segregation <br> 4.390e-02","GO:0000480 (7) <br> endonucleolytic cleavage in 5'-ETS of tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA) <br> 4.510e-02"],"key":["GO:0042254","GO:0006364","GO:0016072","GO:0034470","GO:0034660","GO:0042274","GO:0030490","GO:0000462","GO:0006396","GO:0042273","GO:0016070","GO:0022613","GO:0090304","GO:0043484","GO:0044085","GO:0010467","GO:0071840","GO:0000460","GO:0006139","GO:1903311","GO:0034641","GO:0140694","GO:0000470","GO:0046483","GO:1901360","GO:0000380","GO:0006725","GO:0006401","GO:0090501","GO:0006417","GO:0048024","GO:0000466","GO:0034248","GO:0006412","GO:0042255","GO:0000469","GO:0009888","GO:0000479","GO:0000478","GO:0043043","GO:0006402","GO:0000381","GO:0000028","GO:0050684","GO:0000447","GO:0098789","GO:0017148","GO:0043604","GO:0050793","GO:0098787","GO:0048869","GO:0016477","GO:2000112","GO:0009887","GO:0030154","GO:0034655","GO:0043488","GO:0071695","GO:0048870","GO:0051674","GO:0051124","GO:0061013","GO:0034249","GO:0048856","GO:0006379","GO:0043487","GO:1901992","GO:0010558","GO:0010564","GO:0031124","GO:0021700","GO:2000637","GO:0043170","GO:0045931","GO:0046700","GO:0016071","GO:0060148","GO:0006518","GO:0044270","GO:0045787","GO:0006928","GO:0000967","GO:0000472","GO:0000463","GO:1901989","GO:0031327","GO:0019439","GO:0051168","GO:0051172","GO:0040011","GO:0090305","GO:0090502","GO:0009890","GO:1901987","GO:0030198","GO:0006807","GO:0043062","GO:0045229","GO:0031589","GO:0090068","GO:0010468","GO:0009653","GO:0032502","GO:0022402","GO:0019219","GO:1901361","GO:1900087","GO:0051252","GO:2000815","GO:1905616","GO:1905618","GO:0007275","GO:0031324","GO:0000819","GO:0000480"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(255,153,0,1)","opacity":0.8,"size":[17.7953550406431,17.3780400059476,17.6008721562258,18.1791449406717,18.574999459794,15.6474213213575,15.0058288243981,14.4678651577908,20.8302692975798,15.6246466927496,21.646252525556,20.1450540598241,21.7263270554645,16.7912288743782,21.2365495085901,21.9166085906542,21.7992564270717,14.4175630175859,21.7918912993526,17.8672771286861,21.8992576410591,18.087242583876,14.0119238953729,21.8134276921868,21.8523522252626,15.7770091674668,21.8214383680333,17.8228062035939,16.8305063337258,18.1480942652016,16.2326070330078,13.6432222278982,18.3297510504203,18.9478595681735,15.347393463846,13.87428240696,20.1716021135851,12.6615456825964,12.6615456825964,18.9922727170887,17.590055583935,15.3748790328673,13.0546959964746,16.6877258926718,11.4534900731704,12.3403315804747,16.9856895018019,19.198186175784,20.4511055351737,12.5081553113233,21.0886109133929,19.841242422456,18.839939649172,19.4583438430856,21.0663501315429,18.2961121988684,17.085288219798,17.4646640793059,19.9909763510823,19.9909763510823,10.7830904782563,17.1553644950068,17.1629261256101,21.4314799598188,13.2744719467057,17.1853542018775,15.8958687971055,19.8976533591336,18.8770079958545,15.6474213213575,17.738607174419,14.0119238953729,22.2638765542893,16.3475075605934,18.4086184154678,20.312769800506,14.0765802840523,19.2384897920857,18.4254770233049,17.8496757112528,20.2684457857581,9.76917455830847,9.76917455830847,12.6615456825964,16.3055246780935,19.9429849713556,18.466635060878,16.8207938401224,20.4060561260084,20.1132605268499,17.6484496673007,15.8767324462749,19.9649849668594,18.1960658301284,17.8889399263102,22.2407599675855,17.8932282771326,17.9017615375292,18.0232733780243,17.4404985896537,21.3654298063907,20.5722012024484,21.5431936722454,19.5992969500437,21.014923153445,18.5399385696079,14.4678651577908,20.9419428457711,3.77952755905512,10.7830904782563,10.7830904782563,21.3072327755919,20.4854829602643,17.1927461630494,10.7830904782563],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(255,153,0,1)"}},"hoveron":"points","set":"SharedData7926b229","name":"GO:BP","legendgroup":"GO:BP","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[58.2740178253884,64.4326939768824,59.4745698852999,62.1485267460118,55.3155145348923,59.4979572630904,62.1290372645198,62.1446288497134,55.058253379197,59.5447320186714,54.8867459420668,54.991989142124,64.2728802286474,62.140730953415,58.5117894995917,58.1064082845567,62.1251393682214,62.1329351608182,71.1994419509289,59.9579090263032,62.1212414719229,58.2818136179853,58.2857115142837,61.1506652936179,62.1719141238023,61.4819864789831,60.5036145080812,58.2896094105821,54.3956110084667,57.3463185063659,54.9062354235589,57.0188952172992,54.9491122828414,55.5260009350067,54.7815027420096,57.2254837211151,55.1479049940605,57.3580121952612,68.4475271642487,54.9257249050509,64.5223455917459,61.7197581531863,69.6987518760395,64.428796080584,62.1368330571166,55.7286915425242,59.5018551593888,55.736487335121,62.9281060056946,55.1985776459399,65.2668437847429,55.6390399276607,62.1836078126976,62.187505708996,65.2434564069525,61.4741906863862,57.3930932619469,54.2747762232158,57.798474476982,66.6311074891878,55.7169978536289],"y":[17,17,17,17,17,15.8858289194391,15.1793669331292,15.1793669331292,14.7822621000412,14.3657228760223,12.689875296699,11.7626475954509,11.2370990087385,10.589395370715,10.2074276427626,10.193670892917,9.27961508415284,8.61585500543334,7.98291512706932,7.89460939952282,7.89345662766219,7.6627188028694,6.98816478242422,6.88020374740326,6.82946864047816,6.42430989898207,6.37209510827908,6.16415822126171,5.25136492396257,5.03978320219832,4.82657507599438,4.74620090122484,4.35641147269372,4.26687261478391,4.16696753897636,3.85595661013783,3.83543011003442,3.63089280626127,3.62141051571182,3.59870956791643,3.31210941683955,3.29136952619333,3.23420416598435,3.23068925927494,3.23068925927494,2.72343062453013,2.52336976571084,2.5159805388353,2.50912405098452,2.36966147445428,2.20803318334141,2.04860570971747,1.87240038960762,1.87240038960762,1.55262449975196,1.47281141263602,1.47281141263602,1.44699483690103,1.44460062434806,1.36392271955432,1.30364008695279],"text":["GO:0030684 (79) <br> preribosome <br> 9.892e-30","GO:0070013 (6569) <br> intracellular organelle lumen <br> 4.256e-22","GO:0031974 (6570) <br> membrane-enclosed lumen <br> 4.324e-22","GO:0043233 (6570) <br> organelle lumen <br> 4.324e-22","GO:0005730 (1942) <br> nucleolus <br> 1.255e-17","GO:0031981 (5442) <br> nuclear lumen <br> 1.301e-16","GO:0043228 (6362) <br> non-membrane-bounded organelle <br> 6.617e-16","GO:0043232 (6362) <br> intracellular non-membrane-bounded organelle <br> 6.617e-16","GO:0005654 (4161) <br> nucleoplasm <br> 1.651e-15","GO:0032040 (39) <br> small-subunit processome <br> 4.308e-15","GO:0005604 (97) <br> basement membrane <br> 2.042e-13","GO:0005634 (10053) <br> nucleus <br> 1.727e-12","GO:0062023 (421) <br> collagen-containing extracellular matrix <br> 5.793e-12","GO:0043231 (14514) <br> intracellular membrane-bounded organelle <br> 2.574e-11","GO:0031012 (560) <br> extracellular matrix <br> 6.203e-11","GO:0030312 (561) <br> external encapsulating structure <br> 6.402e-11","GO:0043227 (15557) <br> membrane-bounded organelle <br> 5.253e-10","GO:0043229 (15870) <br> intracellular organelle <br> 2.422e-09","GO:1990904 (2377) <br> ribonucleoprotein complex <br> 1.040e-08","GO:0032991 (7228) <br> protein-containing complex <br> 1.275e-08","GO:0043226 (16674) <br> organelle <br> 1.278e-08","GO:0030686 (27) <br> 90S preribosome <br> 2.174e-08","GO:0030687 (24) <br> preribosome, large subunit precursor <br> 1.028e-07","GO:0035770 (260) <br> ribonucleoprotein granule <br> 1.318e-07","GO:0043256 (12) <br> laminin complex <br> 1.481e-07","GO:0036464 (242) <br> cytoplasmic ribonucleoprotein granule <br> 3.764e-07","GO:0034399 (130) <br> nuclear periphery <br> 4.245e-07","GO:0030688 (15) <br> preribosome, small subunit precursor <br> 6.852e-07","GO:0000932 (93) <br> P-body <br> 5.606e-06","GO:0016604 (869) <br> nuclear body <br> 9.125e-06","GO:0005610 (3) <br> laminin-5 complex <br> 1.491e-05","GO:0010494 (79) <br> cytoplasmic stress granule <br> 1.794e-05","GO:0005622 (17758) <br> intracellular anatomical structure <br> 4.401e-05","GO:0005788 (311) <br> endoplasmic reticulum lumen <br> 5.409e-05","GO:0005576 (4303) <br> extracellular region <br> 6.808e-05","GO:0016363 (109) <br> nuclear matrix <br> 1.393e-04","GO:0005681 (195) <br> spliceosomal complex <br> 1.461e-04","GO:0016607 (414) <br> nuclear speck <br> 2.339e-04","GO:0099080 (1330) <br> supramolecular complex <br> 2.391e-04","GO:0005615 (3353) <br> extracellular space <br> 2.519e-04","GO:0070062 (2110) <br> extracellular exosome <br> 4.874e-04","GO:0042382 (12) <br> paraspeckles <br> 5.112e-04","GO:1903561 (2132) <br> extracellular vesicle <br> 5.832e-04","GO:0065010 (2133) <br> extracellular membrane-bounded organelle <br> 5.879e-04","GO:0043230 (2133) <br> extracellular organelle <br> 5.879e-04","GO:0005847 (24) <br> mRNA cleavage and polyadenylation specificity factor complex <br> 1.890e-03","GO:0031982 (3942) <br> vesicle <br> 2.997e-03","GO:0005849 (28) <br> mRNA cleavage factor complex <br> 3.048e-03","GO:0044391 (189) <br> ribosomal subunit <br> 3.097e-03","GO:0005694 (1795) <br> chromosome <br> 4.269e-03","GO:0071013 (85) <br> catalytic step 2 spliceosome <br> 6.194e-03","GO:0005819 (397) <br> spindle <br> 8.941e-03","GO:0043259 (3) <br> laminin-10 complex <br> 1.342e-02","GO:0043260 (3) <br> laminin-11 complex <br> 1.342e-02","GO:0071007 (30) <br> U2-type catalytic step 2 spliceosome <br> 2.801e-02","GO:0036454 (5) <br> growth factor complex <br> 3.367e-02","GO:0016942 (5) <br> insulin-like growth factor binding protein complex <br> 3.367e-02","GO:0000793 (245) <br> condensed chromosome <br> 3.573e-02","GO:0022626 (104) <br> cytosolic ribosome <br> 3.593e-02","GO:0097149 (3) <br> centralspindlin complex <br> 4.326e-02","GO:0005844 (71) <br> polysome <br> 4.970e-02"],"key":["GO:0030684","GO:0070013","GO:0031974","GO:0043233","GO:0005730","GO:0031981","GO:0043228","GO:0043232","GO:0005654","GO:0032040","GO:0005604","GO:0005634","GO:0062023","GO:0043231","GO:0031012","GO:0030312","GO:0043227","GO:0043229","GO:1990904","GO:0032991","GO:0043226","GO:0030686","GO:0030687","GO:0035770","GO:0043256","GO:0036464","GO:0034399","GO:0030688","GO:0000932","GO:0016604","GO:0005610","GO:0010494","GO:0005622","GO:0005788","GO:0005576","GO:0016363","GO:0005681","GO:0016607","GO:0099080","GO:0005615","GO:0070062","GO:0042382","GO:1903561","GO:0065010","GO:0043230","GO:0005847","GO:0031982","GO:0005849","GO:0044391","GO:0005694","GO:0071013","GO:0005819","GO:0043259","GO:0043260","GO:0071007","GO:0036454","GO:0016942","GO:0000793","GO:0022626","GO:0097149","GO:0005844"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(16,150,24,1)","opacity":0.8,"size":[15.7770091674668,21.5846858270842,21.5848531898987,21.5848531898987,20.1901847556461,21.3765275937192,21.5494464159621,21.5494464159621,21.0753649058574,14.5638560158671,16.1073947029211,22.0465413193162,18.2519287987539,22.4359628482424,18.6328439938166,18.6351952819832,22.5086413687063,22.5294511014458,20.4295540173984,21.689489952904,22.5809795188673,13.87428240696,13.6432222278982,17.5846129732127,12.155291622453,17.4824968559656,16.5639451999854,12.6615456825964,16.0403391838226,19.2011114180566,7.76391281863977,15.7770091674668,22.6464480922659,17.8363121762528,21.1133055701896,16.2912435207844,17.1704446417095,18.2292306201759,19.732225603282,20.8292424583438,20.2888645626106,12.155291622453,20.3011597103541,20.3017153457234,20.3017153457234,13.6432222278982,21.014059045043,13.9445652526459,17.124677160201,20.0960154376445,15.8958687971055,18.1723115049688,7.76391281863977,7.76391281863977,14.0765802840523,9.76917455830847,9.76917455830847,17.5000871704921,16.217554416902,7.76391281863977,15.6015087283569],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(16,150,24,1)"}},"hoveron":"points","set":"SharedData7926b229","name":"GO:CC","legendgroup":"GO:CC","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[3.69144591541137,3.53944962347349,48.6628616249317,42.056868936862,3.71093261950597,3.69534325623029,9.86873111339991,5.90123815973914,8.594300665613,47.8132413264071,48.4017397900641,48.4134318125208,16.9813781079293,19.8576156322924,9.32310339875108,20.9293843574955,17.4880324143889,9.38156351103489,42.1854811838863,15.7926891581586,48.7447057821291,16.7202562730617,16.7163589322427,22.6870850668285,3.7148299603249,9.23736190073484,9.30361669465648,9.92719122568372,8.58260864315624,21.1437381025361,9.33869276202677,23.0495377629881,20.9917418105982],"y":[17,17,17,17,12.9368347804459,12.5920551582895,12.4733501498392,9.26957417394603,8.87584359645822,6.57618507804094,5.38011028060288,5.16005938771984,5.07213077499654,4.93783509758942,4.64052274837097,3.56796596488784,3.37205276681377,3.19162024408622,3.05746812451752,3.05094173874928,3.0345542426312,3.03454983912326,3.03454983912326,2.27813919679073,2.2736543165399,2.2290643567497,2.17802375002922,2.11143093552033,2.06077785415678,1.85270278886111,1.63889814267512,1.46509151796191,1.43564577393493],"text":["GO:0003723 (3142) <br> RNA binding <br> 3.069e-51","GO:0003676 (5447) <br> nucleic acid binding <br> 5.895e-33","GO:1901363 (7416) <br> heterocyclic compound binding <br> 2.959e-23","GO:0097159 (7497) <br> organic cyclic compound binding <br> 1.089e-22","GO:0003729 (350) <br> mRNA binding <br> 1.157e-13","GO:0003724 (76) <br> RNA helicase activity <br> 2.558e-13","GO:0008186 (78) <br> ATP-dependent activity, acting on RNA <br> 3.362e-13","GO:0004386 (160) <br> helicase activity <br> 5.376e-10","GO:0005201 (173) <br> extracellular matrix structural constituent <br> 1.331e-09","GO:0140098 (400) <br> catalytic activity, acting on RNA <br> 2.653e-07","GO:0140640 (607) <br> catalytic activity, acting on a nucleic acid <br> 4.168e-06","GO:0140657 (550) <br> ATP-dependent activity <br> 6.917e-06","GO:0016887 (316) <br> ATP hydrolysis activity <br> 8.470e-06","GO:0019838 (137) <br> growth factor binding <br> 1.154e-05","GO:0005520 (29) <br> insulin-like growth factor binding <br> 2.288e-05","GO:0030515 (32) <br> snoRNA binding <br> 2.704e-04","GO:0017111 (656) <br> nucleoside-triphosphatase activity <br> 4.246e-04","GO:0005539 (242) <br> glycosaminoglycan binding <br> 6.432e-04","GO:0097367 (2288) <br> carbohydrate derivative binding <br> 8.761e-04","GO:0016462 (712) <br> pyrophosphatase activity <br> 8.893e-04","GO:1901681 (265) <br> sulfur compound binding <br> 9.235e-04","GO:0016818 (715) <br> hydrolase activity, acting on acid anhydrides, in phosphorus-containing anhydrides <br> 9.235e-04","GO:0016817 (715) <br> hydrolase activity, acting on acid anhydrides <br> 9.235e-04","GO:0031994 (13) <br> insulin-like growth factor I binding <br> 5.271e-03","GO:0003730 (97) <br> mRNA 3'-UTR binding <br> 5.325e-03","GO:0005488 (18292) <br> binding <br> 5.901e-03","GO:0005515 (14799) <br> protein binding <br> 6.637e-03","GO:0008201 (170) <br> heparin binding <br> 7.737e-03","GO:0005198 (980) <br> structural molecule activity <br> 8.694e-03","GO:0030619 (8) <br> U1 snRNA binding <br> 1.404e-02","GO:0005524 (1502) <br> ATP binding <br> 2.297e-02","GO:0032559 (1565) <br> adenyl ribonucleotide binding <br> 3.427e-02","GO:0030554 (1576) <br> adenyl nucleotide binding <br> 3.667e-02"],"key":["GO:0003723","GO:0003676","GO:1901363","GO:0097159","GO:0003729","GO:0003724","GO:0008186","GO:0004386","GO:0005201","GO:0140098","GO:0140640","GO:0140657","GO:0016887","GO:0019838","GO:0005520","GO:0030515","GO:0017111","GO:0005539","GO:0097367","GO:0016462","GO:1901681","GO:0016818","GO:0016817","GO:0031994","GO:0003730","GO:0005488","GO:0005515","GO:0008201","GO:0005198","GO:0030619","GO:0005524","GO:0032559","GO:0030554"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(220,57,18,1)","opacity":0.8,"size":[20.7544493103789,21.3775492385862,21.7175350263776,21.7293865937271,17.9998926225093,15.7136702294336,15.7562044411815,16.8780433355828,16.9942802982776,18.1825476147104,18.7386872243564,18.6090765702785,17.8585070211145,16.6440054239926,14.0119238953729,14.1985580080856,18.839939649172,17.4824968559656,20.3846245105039,18.9460480509101,17.6115984214044,18.9514743464424,18.9514743464424,12.3403315804747,16.1073947029211,22.6771653543307,22.4563568037417,16.9683400101948,19.3529617917447,11.1468946429537,19.8807807251582,19.9306605791479,19.9391480558606],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(220,57,18,1)"}},"hoveron":"points","set":"SharedData7926b229","name":"GO:MF","legendgroup":"GO:MF","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[199.008342484717,198.653066158901,199.488551144886],"y":[6.05697996427332,2.65798389299838,1.44250523125985],"text":["KEGG:04512 (88) <br> ECM-receptor interaction <br> 8.770e-07","KEGG:03008 (98) <br> Ribosome biogenesis in eukaryotes <br> 2.198e-03","KEGG:05146 (101) <br> Amoebiasis <br> 3.610e-02"],"key":["KEGG:04512","KEGG:03008","KEGG:05146"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(221,68,119,1)","opacity":0.8,"size":[15.9517821376017,16.1236713072189,16.1713990065972],"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(221,68,119,1)"}},"hoveron":"points","set":"SharedData7926b229","name":"KEGG","legendgroup":"KEGG","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","_isNestedKey":false,"frame":null},{"x":[2,49.9528814359943],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(220,57,18,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[53.8499055266887,71.2657061880019],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(16,150,24,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[75.1627302786963,193.967406707605],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(255,153,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[197.864430798299,200.003897024091],"y":[-1,-1],"text":"","type":"scatter","mode":"lines","line":{"width":11.3385826771654,"color":"rgba(221,68,119,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[180],"y":[16.2],"text":"values above this threshold are capped","hovertext":"","textfont":{"size":7.55905511811024,"color":"rgba(190,190,190,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,210],"y":[16,16],"text":"","type":"scatter","mode":"lines","line":{"width":0.755905511811024,"color":"rgba(190,190,190,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":29.2835201328352,"r":6.6417600664176,"b":51.8931100989696,"l":61.0377750103778},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0,210],"tickmode":"array","ticktext":["GO:MF","GO:CC","GO:BP","KEGG"],"tickvals":[25.9764407179972,62.5578058573453,134.565068493151,198.934163911195],"categoryorder":"array","categoryarray":["GO:MF","GO:CC","GO:BP","KEGG"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.65296803652968,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.6268161062682},"tickangle":-45,"showline":true,"linecolor":"rgba(190,190,190,1)","linewidth":0.132835201328352,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":"","hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-1,18.5],"tickmode":"array","ticktext":["0","2","4","6","8","10","12","14",">16"],"tickvals":[0,2,4,6,8,10,12,14,16],"categoryorder":"array","categoryarray":["0","2","4","6","8","10","12","14",">16"],"nticks":null,"ticks":"outside","tickcolor":"rgba(190,190,190,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(190,190,190,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":"","hoverformat":".2f"},"annotations":[{"text":"-log10(p-adj)","x":0,"y":0.5,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":13.2835201328352},"xref":"paper","yref":"paper","textangle":-90,"xanchor":"right","yanchor":"center","annotationType":"axis","xshift":-37.3931091739311},{"text":"query_1","x":0.5,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(169,169,169,1)","family":"","size":13.2835201328352},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"center","yanchor":"bottom"}],"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1},{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":24.9730178497302,"yanchor":1,"ysizemode":"pixel"}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative","dragmode":"zoom"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"b6c31f647e8":{"x":{},"y":{},"text":{},"colour":{},"size":{},"alpha":{},"type":"scatter"},"b6c5c725a9b":{"x":{},"xend":{},"y":{},"yend":{}},"b6c6c8b130d":{"x":{},"xend":{},"y":{},"yend":{}},"b6c45911316":{"x":{},"xend":{},"y":{},"yend":{}},"b6c5caf3e38":{"x":{},"xend":{},"y":{},"yend":{}},"b6c22567df5":{"x":{},"y":{}},"b6cc14620b":{"yintercept":{}}},"cur_data":"b6c31f647e8","visdat":{"b6c31f647e8":["function (y) ","x"],"b6c5c725a9b":["function (y) ","x"],"b6c6c8b130d":["function (y) ","x"],"b6c45911316":["function (y) ","x"],"b6c5caf3e38":["function (y) ","x"],"b6c22567df5":["function (y) ","x"],"b6cc14620b":["function (y) ","x"]},"highlight":{"on":"plotly_click","off":"plotly_doubleclick","persistent":false,"dynamic":false,"color":null,"selectize":false,"defaultValues":null,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0,"ctGroups":["SharedData7926b229"]},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="table-results-1" class="section level4">
+<h4>Table results</h4>
+<p>The results can also be visualized with a table:</p>
+<pre class="r"><code>if(is.null(GO)){
+  print(&quot;NOT enough data.&quot;)
+}else{
+  GO$result %&gt;% 
+    as.data.frame() %&gt;% 
+    select(starts_with(c(&quot;source&quot;, &quot;term_name&quot;, &quot;p_value&quot;, &quot;term_size&quot;, &quot;intersection_size&quot;))) %&gt;% 
+    arrange(p_value) %&gt;%  
+    mutate(p_value = format(p_value, scientific = T, digits = 2)) %&gt;% 
+    DT::datatable(options = list(
+    columnDefs = list(list(className = &#39;dt-center&#39;, targets = 1:6)),
+    pageLength = 10)) %&gt;%
+    formatStyle(&#39;source&#39;, backgroundColor = styleEqual(c(&quot;GO:BP&quot;, &quot;GO:MF&quot;, &quot;GO:CC&quot;, &quot;KEGG&quot;), c(&#39;orange&#39;, &#39;tomato&#39;, &#39;lightgreen&#39;, &#39;violet&#39;)))
+}</code></pre>
+<div id="htmlwidget-85179f0d812c9115cde5" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-85179f0d812c9115cde5">{"x":{"filter":"none","vertical":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120","121","122","123","124","125","126","127","128","129","130","131","132","133","134","135","136","137","138","139","140","141","142","143","144","145","146","147","148","149","150","151","152","153","154","155","156","157","158","159","160","161","162","163","164","165","166","167","168","169","170","171","172","173","174","175","176","177","178","179","180","181","182","183","184","185","186","187","188","189","190","191","192","193","194","195","196","197","198","199","200","201","202","203","204","205","206","207","208","209","210","211","212"],["GO:MF","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:BP","GO:CC","GO:MF","GO:MF","GO:CC","GO:CC","GO:CC","GO:BP","GO:CC","GO:CC","GO:BP","GO:CC","GO:CC","GO:CC","GO:CC","GO:BP","GO:MF","GO:CC","GO:MF","GO:BP","GO:MF","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:MF","GO:MF","GO:CC","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:CC","GO:CC","GO:BP","GO:CC","GO:CC","GO:CC","GO:MF","GO:BP","GO:CC","GO:CC","GO:CC","GO:BP","KEGG","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:CC","GO:BP","GO:MF","GO:MF","GO:CC","GO:BP","GO:MF","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:BP","GO:BP","GO:MF","GO:CC","GO:BP","GO:CC","GO:CC","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:CC","GO:MF","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:BP","GO:CC","GO:CC","GO:CC","GO:CC","GO:CC","GO:MF","GO:MF","GO:MF","GO:MF","GO:MF","GO:MF","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:BP","GO:BP","GO:BP","KEGG","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:CC","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:BP","GO:BP","GO:BP","GO:MF","GO:MF","GO:BP","GO:MF","GO:BP","GO:CC","GO:BP","GO:BP","GO:MF","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:CC","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:MF","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:MF","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:CC","GO:BP","GO:MF","GO:CC","GO:CC","KEGG","GO:MF","GO:BP","GO:BP","GO:BP","GO:BP","GO:BP","GO:CC","GO:BP","GO:BP","GO:CC"],[435,11644,2363,5674,396,9946,10020,1136,11974,10279,2716,1444,2130,11658,377,1450,7877,2125,2129,311,1462,206,440,267,436,2389,2020,294,2675,2128,1197,1093,2124,1002,1693,2126,11657,5672,7611,4452,1568,2123,1138,21335,1139,1874,2136,11756,12371,1959,1708,1140,12639,294,4650,19777,204,2164,26382,11907,10007,141,23211,11910,3845,898,214,4583,14174,24668,272,814,159,2694,2394,1880,283,21484,431,240,2408,14514,210,9805,867,334,2404,11645,213,901,3746,4210,277,4858,223,222,12114,3975,2395,160,2739,2020,4067,2715,2127,1895,10312,3540,11995,3778,3777,15,15281,191,22121,5897,12445,483,15339,22120,15172,203,5822,29342,4209,7722,10017,1451,485,2330,12375,19692,15173,16045,347,15609,17778,9806,5309,441,15160,1858,2375,2930,12374,25253,1875,4711,4717,8180,2035,7246,29853,12196,1690,13653,460,14319,5673,16962,2494,12717,13525,2868,343,216,2139,2140,207,4913,25250,8268,6681,15652,15656,11470,21336,21485,4212,1884,25248,7744,2765,12131,13211,8396,21112,2924,4651,4023,8814,7583,6477,24669,23438,1957,910,15722,5402,110,1014,417,4874,30023,28498,28500,3168,8265,3280,303,224,480],["RNA binding","ribosome biogenesis","rRNA processing","rRNA metabolic process","nucleic acid binding","ncRNA processing","ncRNA metabolic process","preribosome","heterocyclic compound binding","organic cyclic compound binding","intracellular organelle lumen","membrane-enclosed lumen","organelle lumen","ribosomal small subunit biogenesis","nucleolus","nuclear lumen","maturation of SSU-rRNA","non-membrane-bounded organelle","intracellular non-membrane-bounded organelle","nucleoplasm","small-subunit processome","maturation of SSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","mRNA binding","basement membrane","RNA helicase activity","RNA processing","ATP-dependent activity, acting on RNA","nucleus","collagen-containing extracellular matrix","intracellular membrane-bounded organelle","extracellular matrix","external encapsulating structure","membrane-bounded organelle","helicase activity","extracellular matrix structural constituent","intracellular organelle","ribosomal large subunit biogenesis","RNA metabolic process","ribonucleoprotein complex biogenesis","ribonucleoprotein complex","protein-containing complex","organelle","90S preribosome","nucleic acid metabolic process","preribosome, large subunit precursor","ribonucleoprotein granule","laminin complex","catalytic activity, acting on RNA","regulation of RNA splicing","cytoplasmic ribonucleoprotein granule","nuclear periphery","preribosome, small subunit precursor","cellular component biogenesis","ECM-receptor interaction","gene expression","cellular component organization or biogenesis","maturation of 5.8S rRNA","nucleobase-containing compound metabolic process","regulation of mRNA metabolic process","catalytic activity, acting on a nucleic acid","cellular nitrogen compound metabolic process","P-body","non-membrane-bounded organelle assembly","ATP-dependent activity","ATP hydrolysis activity","nuclear body","maturation of LSU-rRNA","growth factor binding","heterocycle metabolic process","organic cyclic compound metabolic process","laminin-5 complex","cytoplasmic stress granule","alternative mRNA splicing, via spliceosome","cellular aromatic compound metabolic process","RNA catabolic process","insulin-like growth factor binding","intracellular anatomical structure","RNA phosphodiester bond hydrolysis","endoplasmic reticulum lumen","extracellular region","regulation of translation","regulation of mRNA splicing, via spliceosome","maturation of 5.8S rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","regulation of cellular amide metabolic process","nuclear matrix","spliceosomal complex","translation","ribosome assembly","cleavage involved in rRNA processing","nuclear speck","supramolecular complex","tissue development","extracellular space","snoRNA binding","endonucleolytic cleavage of tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","endonucleolytic cleavage involved in rRNA processing","peptide biosynthetic process","nucleoside-triphosphatase activity","mRNA catabolic process","regulation of alternative mRNA splicing, via spliceosome","extracellular exosome","paraspeckles","extracellular vesicle","extracellular membrane-bounded organelle","extracellular organelle","glycosaminoglycan binding","carbohydrate derivative binding","pyrophosphatase activity","sulfur compound binding","hydrolase activity, acting on acid anhydrides, in phosphorus-containing anhydrides","hydrolase activity, acting on acid anhydrides","ribosomal small subunit assembly","regulation of mRNA processing","endonucleolytic cleavage in ITS1 to separate SSU-rRNA from 5.8S rRNA and LSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","pre-mRNA cleavage required for polyadenylation","negative regulation of translation","amide biosynthetic process","mRNA cleavage and polyadenylation specificity factor complex","regulation of developmental process","mRNA cleavage involved in mRNA processing","cellular developmental process","Ribosome biogenesis in eukaryotes","cell migration","regulation of cellular macromolecule biosynthetic process","animal organ morphogenesis","cell differentiation","nucleobase-containing compound catabolic process","vesicle","mRNA cleavage factor complex","ribosomal subunit","regulation of mRNA stability","anatomical structure maturation","cell motility","localization of cell","chromosome","synaptic assembly at neuromuscular junction","regulation of mRNA catabolic process","negative regulation of cellular amide metabolic process","insulin-like growth factor I binding","mRNA 3'-UTR binding","anatomical structure development","binding","mRNA cleavage","catalytic step 2 spliceosome","regulation of RNA stability","positive regulation of mitotic cell cycle phase transition","protein binding","negative regulation of macromolecule biosynthetic process","regulation of cell cycle process","mRNA 3'-end processing","heparin binding","developmental maturation","positive regulation of gene silencing by miRNA","macromolecule metabolic process","structural molecule activity","positive regulation of mitotic cell cycle","spindle","heterocycle catabolic process","mRNA metabolic process","positive regulation of posttranscriptional gene silencing","peptide metabolic process","cellular nitrogen compound catabolic process","positive regulation of cell cycle","movement of cell or subcellular component","rRNA 5'-end processing","endonucleolytic cleavage to generate mature 5'-end of SSU-rRNA from (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","laminin-10 complex","laminin-11 complex","maturation of LSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","U1 snRNA binding","positive regulation of cell cycle phase transition","negative regulation of cellular biosynthetic process","aromatic compound catabolic process","nuclear export","negative regulation of nitrogen compound metabolic process","locomotion","nucleic acid phosphodiester bond hydrolysis","RNA phosphodiester bond hydrolysis, endonucleolytic","negative regulation of biosynthetic process","ATP binding","regulation of cell cycle phase transition","extracellular matrix organization","nitrogen compound metabolic process","extracellular structure organization","external encapsulating structure organization","cell-substrate adhesion","positive regulation of cell cycle process","U2-type catalytic step 2 spliceosome","regulation of gene expression","anatomical structure morphogenesis","developmental process","cell cycle process","regulation of nucleobase-containing compound metabolic process","organic cyclic compound catabolic process","positive regulation of G1/S transition of mitotic cell cycle","growth factor complex","insulin-like growth factor binding protein complex","regulation of RNA metabolic process","adenyl ribonucleotide binding","condensed chromosome","cytosolic ribosome","Amoebiasis","adenyl nucleotide binding","regulation of mRNA stability involved in response to oxidative stress","regulation of miRNA-mediated gene silencing by inhibition of translation","positive regulation of miRNA-mediated gene silencing by inhibition of translation","multicellular organism development","negative regulation of cellular metabolic process","centralspindlin complex","sister chromatid segregation","endonucleolytic cleavage in 5'-ETS of tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)","polysome"],["3.1e-51","3.4e-40","5.4e-39","2.1e-37","5.9e-33","1.6e-32","3.4e-31","9.9e-30","3.0e-23","1.1e-22","4.3e-22","4.3e-22","4.3e-22","4.7e-21","1.3e-17","1.3e-16","5.4e-16","6.6e-16","6.6e-16","1.7e-15","4.3e-15","1.3e-14","1.2e-13","2.0e-13","2.6e-13","2.7e-13","3.4e-13","1.7e-12","5.8e-12","2.6e-11","6.2e-11","6.4e-11","5.3e-10","5.4e-10","1.3e-09","2.4e-09","2.9e-09","7.0e-09","7.2e-09","1.0e-08","1.3e-08","1.3e-08","2.2e-08","3.6e-08","1.0e-07","1.3e-07","1.5e-07","2.7e-07","3.6e-07","3.8e-07","4.2e-07","6.9e-07","8.3e-07","8.8e-07","1.1e-06","1.5e-06","1.7e-06","2.9e-06","3.6e-06","4.2e-06","4.4e-06","5.6e-06","6.6e-06","6.9e-06","8.5e-06","9.1e-06","9.3e-06","1.2e-05","1.2e-05","1.2e-05","1.5e-05","1.8e-05","1.8e-05","1.9e-05","2.2e-05","2.3e-05","4.4e-05","4.9e-05","5.4e-05","6.8e-05","7.8e-05","1.0e-04","1.1e-04","1.2e-04","1.4e-04","1.5e-04","1.7e-04","1.8e-04","2.3e-04","2.3e-04","2.4e-04","2.4e-04","2.5e-04","2.7e-04","2.9e-04","2.9e-04","3.2e-04","4.2e-04","4.6e-04","4.7e-04","4.9e-04","5.1e-04","5.8e-04","5.9e-04","5.9e-04","6.4e-04","8.8e-04","8.9e-04","9.2e-04","9.2e-04","9.2e-04","9.6e-04","1.3e-03","1.4e-03","1.5e-03","1.6e-03","1.6e-03","1.9e-03","1.9e-03","1.9e-03","2.1e-03","2.2e-03","2.3e-03","2.6e-03","2.8e-03","2.9e-03","2.9e-03","3.0e-03","3.0e-03","3.1e-03","3.2e-03","3.6e-03","3.8e-03","3.8e-03","4.3e-03","4.9e-03","5.1e-03","5.1e-03","5.3e-03","5.3e-03","5.5e-03","5.9e-03","6.0e-03","6.2e-03","6.3e-03","6.5e-03","6.6e-03","6.9e-03","7.1e-03","7.3e-03","7.7e-03","7.8e-03","8.1e-03","8.6e-03","8.7e-03","8.9e-03","8.9e-03","9.0e-03","9.1e-03","9.6e-03","9.7e-03","1.1e-02","1.1e-02","1.2e-02","1.3e-02","1.3e-02","1.3e-02","1.3e-02","1.4e-02","1.4e-02","1.4e-02","1.6e-02","1.6e-02","1.7e-02","1.7e-02","1.9e-02","1.9e-02","2.0e-02","2.3e-02","2.3e-02","2.4e-02","2.5e-02","2.5e-02","2.5e-02","2.7e-02","2.7e-02","2.7e-02","2.8e-02","2.9e-02","3.0e-02","3.0e-02","3.1e-02","3.1e-02","3.2e-02","3.3e-02","3.4e-02","3.4e-02","3.4e-02","3.4e-02","3.6e-02","3.6e-02","3.6e-02","3.7e-02","3.7e-02","3.9e-02","3.9e-02","4.2e-02","4.2e-02","4.3e-02","4.4e-02","4.5e-02","5.0e-02"],[3142,302,225,263,5447,399,536,79,7416,7497,6569,6570,6570,73,1942,5442,50,6362,6362,4161,39,37,350,97,76,3356,78,10053,421,14514,560,561,15557,160,173,15870,72,6948,1870,2377,7228,16674,27,7476,24,260,12,400,151,242,130,15,4801,88,8909,7994,36,7940,318,607,8767,93,373,550,316,869,29,137,8099,8395,3,79,79,8159,308,29,17758,155,311,4303,390,105,24,446,109,195,713,61,27,414,1330,1912,3353,32,15,15,738,656,261,62,2110,12,2132,2133,2133,242,2288,712,265,715,715,18,141,9,13,172,867,24,2421,14,4210,98,1454,656,1066,4128,435,3942,28,189,184,239,1645,1645,1795,7,193,194,13,97,5718,18292,20,85,197,85,14799,1523,675,73,170,290,29,12328,980,113,397,473,2153,30,895,479,314,2074,5,5,3,3,15,8,110,1581,494,154,2330,1821,272,84,1610,1502,404,323,12062,324,326,356,235,30,5388,2685,6326,1194,3945,522,37,5,5,3700,1565,245,104,101,1576,2,7,7,5114,2493,3,198,7,71],[131,47,42,43,143,46,50,25,152,152,134,134,134,20,65,112,15,119,119,93,13,13,25,13,10,83,10,153,18,187,19,19,192,10,13,193,12,118,51,55,99,197,8,122,7,17,5,21,13,16,12,6,84,10,132,119,8,122,18,24,129,10,19,11,9,28,7,8,122,125,3,9,9,122,17,5,198,12,10,37,18,9,6,19,9,12,24,8,6,17,32,25,31,6,5,5,24,10,14,7,23,4,23,23,23,4,17,10,4,10,10,5,9,4,3,11,25,3,37,3,52,11,20,21,16,51,17,9,3,9,11,4,21,21,35,2,11,11,3,7,44,206,3,7,11,3,179,34,7,4,8,4,5,153,21,7,5,17,43,5,24,17,12,23,3,3,2,2,4,3,3,34,17,9,44,21,12,7,34,12,5,10,149,10,10,11,10,4,80,26,78,8,63,17,2,2,2,60,12,4,6,6,12,2,3,3,39,45,2,9,3,5]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>source<\/th>\n      <th>source_order<\/th>\n      <th>term_name<\/th>\n      <th>p_value<\/th>\n      <th>term_size<\/th>\n      <th>intersection_size<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"className":"dt-center","targets":[1,2,3,4,5,6]},{"orderable":false,"targets":0}],"pageLength":10,"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'background-color':value == \"GO:BP\" ? \"orange\" : value == \"GO:MF\" ? \"tomato\" : value == \"GO:CC\" ? \"lightgreen\" : value == \"KEGG\" ? \"violet\" : null});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+</div>
+<div id="treemap-1" class="section level4 tabset tabset-fade">
+<h4 class="tabset tabset-fade">Treemap</h4>
+<div id="bp-1" class="section level5">
+<h5>BP</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:BP&quot;) &gt;= 5 &amp; !is.null(GO)){
+  simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:BP&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;BP&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+BP &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  BP &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/BP-cond2-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="mf-1" class="section level5">
+<h5>MF</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:MF&quot;) &gt;= 5 &amp; !is.null(GO)){
+simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:MF&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;MF&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+MF &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  MF &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/MF-cond2-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="cc-1" class="section level5">
+<h5>CC</h5>
+<pre class="r"><code>if(sum(GO$result$source == &quot;GO:CC&quot;) &gt;= 5 &amp; !is.null(GO)){
+simMatrix &lt;- GO$result %&gt;% 
+  as.data.frame() %&gt;%
+  filter(source == &quot;GO:CC&quot;) %&gt;% 
+  pull(term_id) %&gt;% 
+  calculateSimMatrix(orgdb=&quot;org.Hs.eg.db&quot;, ont=&quot;CC&quot;, method=&quot;Rel&quot;)
+
+scores &lt;- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms &lt;- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb=&quot;org.Hs.eg.db&quot;)
+
+treemapPlot(reducedTerms)
+CC &lt;- T
+}else{
+  print(&quot;NOT enough data.&quot;)
+  CC &lt;- F
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/CC-cond2-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="scatterplot-1" class="section level4">
+<h4>ScatterPlot</h4>
+<pre class="r"><code>if(BP | MF | CC){
+scatterPlot(simMatrix, reducedTerms, size = &quot;score&quot;, labelSize = 5)
+}else{
+  print(&quot;NOT enough data.&quot;)
+}</code></pre>
+<p><img src="figure/Template_LFQ.Rmd/scatter-cond2-1.png" width="1440" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+</div>
+<div id="network-analysis" class="section level2">
+<h2><strong>6. Network analysis</strong></h2>
+<p>Overview from <strong>STRING Database</strong>: In STRING, each
+protein-protein interaction is annotated with one or more ‘scores’.
+Importantly, these scores do <strong>not</strong> indicate the strength
+or the specificity of the interaction. Instead, they are indicators of
+<strong>confidence</strong>, i.e. how likely STRING judges an
+interaction to be true, given the available evidence. All scores rank
+from 0 to 1, with 1 being the highest possible confidence. A score of
+0.5 would indicate that roughly every second interaction might be
+erroneous (i.e., a false positive).</p>
+<pre class="r"><code># if(leng_dep != 0){
+#   
+#   string_db &lt;- STRINGdb$new(version=&quot;11&quot;, species=9606, score_threshold=400)
+# 
+#   string_mapped &lt;- string_db$map(string_res, &quot;Gene.name&quot;, removeUnmappedRows = TRUE, quiet = T)
+# 
+#   hits &lt;- string_mapped$STRING_id[1:leng_dep]
+# 
+#   string_db$plot_network(hits, add_link = T)
+# }else{
+#   print(&quot;NOT enough data.&quot;)
+# }</code></pre>
+<div id="cytoscape-network" class="section level3">
+<h3><strong>6.1. Cytoscape Network</strong></h3>
+<p>Cytoscape is an open source software platform for visualizing complex
+networks and integrating these with any type of attribute data. In this
+presentation all proteins showing at least one confidence level from the
+STRING database are shown. The <strong>color</strong> code is relative
+to <strong>fold change</strong> and the <strong>size</strong> is
+directly proportional to the <strong>significance
+(p-value)</strong>.</p>
+<pre class="r"><code>print(&quot;Enable Cytoscape option to see this results.&quot;)</code></pre>
+<pre><code>[1] &quot;Enable Cytoscape option to see this results.&quot;</code></pre>
+<pre class="r"><code>if(n_edge != 0){
+  knitr::include_graphics(&quot;assets/network_FC_pvalue.png&quot;,  error = F)
+}else{
+  print(&quot;NOT enough data.&quot;)
+}</code></pre>
+</div>
+<div id="cytoscape-enrichmentmap" class="section level3">
+<h3><strong>6.2. Cytoscape EnrichmentMap</strong></h3>
+<p>An <strong>enrichment map</strong> is a different sort of network.
+Instead of nodes representing genes, nodes represent pathways or
+functions. Edges between these pathways or functions represent shared
+genes or pathway crosstalk. An enrichment map is a way to visualize your
+enrichment results to help reduce redundancy and uncover main
+themes.</p>
+<pre class="r"><code>print(&quot;Enable Cytoscape option to see this results.&quot;)</code></pre>
+<pre><code>[1] &quot;Enable Cytoscape option to see this results.&quot;</code></pre>
+<pre class="r"><code>Gname &lt;- results %&gt;% filter(significant) %&gt;% pull(name)
+
+if(!params$Imputation){
+  
+  Uni &lt;- unique_pair(data_filt_unique, conditions = conditions, table = T) %&gt;% 
+  pull(name) %&gt;% 
+  unique()
+
+  Gname &lt;- c(Gname, Uni)
+}
+
+if(length(Gname) == 0){
+  
+  print(&quot;NOT enough data.&quot;)
+  
+}else{
+  
+  GO &lt;- gost(query = Gname, organism = &quot;hsapiens&quot;, sources = c(&quot;GO:BP&quot;, &quot;GO:MF&quot;, &quot;GO:CC&quot;, &quot;KEGG&quot;), ordered_query = T, evcodes = TRUE)
+  
+  if(is.null(GO)){
+    
+    print(&quot;NOT enough data.&quot;)
+
+    enrich_map = F
+    
+  }else{
+    
+    enrich_map = T
+    
+    gem &lt;- GO$result[,c(&quot;term_id&quot;, &quot;term_name&quot;, &quot;p_value&quot;, &quot;intersection&quot;)]
+    colnames(gem) &lt;- c(&quot;GO.ID&quot;, &quot;Description&quot;, &quot;p.Val&quot;, &quot;Genes&quot;)
+    gem$FDR &lt;- gem$p.Val
+    gem$Phenotype = &quot;+1&quot;
+    gem &lt;- gem[,c(&quot;GO.ID&quot;, &quot;Description&quot;, &quot;p.Val&quot;, &quot;FDR&quot;, &quot;Phenotype&quot;, &quot;Genes&quot;)]
+    head(gem)
+  
+    write.table(gem, here::here(&quot;output/enrichmentmap.txt&quot;),col.name=TRUE,sep=&quot;\t&quot;,row.names=FALSE,quote=FALSE)
+    
+  }
+}</code></pre>
+<pre class="r"><code>if(enrich_map){
+  knitr::include_graphics(&quot;assets/network_enrichmentmap.png&quot;,  error = F)
+}else{
+  print(&quot;NOT enough data.&quot;)
+}</code></pre>
+</div>
+</div>
+<div id="section" class="section level2 unnumbered">
+<h2 class="unnumbered"></h2>
+<pre class="r"><code>saveWorkbook(excel, here::here(paste0(&quot;output/results_table_&quot;, test, &quot;.xlsx&quot;)), overwrite = T)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.0.3 (2020-10-10)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows 10 x64 (build 19042)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Italian_Italy.1252  LC_CTYPE=Italian_Italy.1252   
+[3] LC_MONETARY=Italian_Italy.1252 LC_NUMERIC=C                  
+[5] LC_TIME=Italian_Italy.1252    
+
+attached base packages:
+[1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+ [1] forcats_0.5.1               stringr_1.4.0              
+ [3] dplyr_1.0.8                 purrr_0.3.4                
+ [5] readr_2.1.2                 tidyr_1.2.0                
+ [7] tibble_3.1.6                tidyverse_1.3.1            
+ [9] openxlsx_4.2.5              here_1.0.1                 
+[11] RColorBrewer_1.1-2          RCy3_2.10.2                
+[13] STRINGdb_2.2.2              naniar_0.6.1               
+[15] visdat_0.5.3                ggrepel_0.9.1              
+[17] ggplot2_3.3.5               UpSetR_1.4.0               
+[19] ggstatsplot_0.9.1           datapasta_3.1.0            
+[21] patchwork_1.1.1             DT_0.21                    
+[23] rrvgo_1.2.0                 org.Hs.eg.db_3.12.0        
+[25] AnnotationDbi_1.52.0        gprofiler2_0.2.1           
+[27] enrichR_3.0                 preprocessCore_1.52.1      
+[29] SummarizedExperiment_1.20.0 Biobase_2.50.0             
+[31] GenomicRanges_1.42.0        GenomeInfoDb_1.26.2        
+[33] IRanges_2.24.1              S4Vectors_0.28.1           
+[35] BiocGenerics_0.36.0         MatrixGenerics_1.2.1       
+[37] matrixStats_0.61.0          DEP_1.12.0                 
+[39] MBQN_2.2.0                  workflowr_1.7.0            
+
+loaded via a namespace (and not attached):
+  [1] rappdirs_0.3.3         R.methodsS3_1.8.1      bit64_4.0.5           
+  [4] knitr_1.37             DelayedArray_0.16.2    R.utils_2.11.0        
+  [7] data.table_1.14.2      RCurl_1.98-1.6         doParallel_1.0.17     
+ [10] generics_0.1.2         callr_3.7.0            RSQLite_2.2.10        
+ [13] correlation_0.8.0      chron_2.3-56           bit_4.0.4             
+ [16] tzdb_0.2.0             lubridate_1.8.0        xml2_1.3.3            
+ [19] httpuv_1.6.5           assertthat_0.2.1       WRS2_1.1-3            
+ [22] xfun_0.30              hms_1.1.1              jquerylib_0.1.4       
+ [25] evaluate_0.15          promises_1.2.0.1       fansi_1.0.2           
+ [28] readxl_1.3.1           caTools_1.18.2         dbplyr_2.1.1          
+ [31] igraph_1.2.11          DBI_1.1.2              htmlwidgets_1.5.4     
+ [34] reshape_0.8.8          paletteer_1.4.0        hash_2.2.6.1          
+ [37] ellipsis_0.3.2         crosstalk_1.2.0        backports_1.4.1       
+ [40] insight_0.16.0         gridBase_0.4-7         vctrs_0.3.8           
+ [43] imputeLCMD_2.0         Cairo_1.5-14           cachem_1.0.6          
+ [46] withr_2.5.0            treemap_2.4-3          cluster_2.1.0         
+ [49] lazyeval_0.2.2         crayon_1.5.1           labeling_0.4.2        
+ [52] pkgconfig_2.0.3        slam_0.1-50            statsExpressions_1.3.0
+ [55] ProtGenerics_1.22.0    wordcloud_2.6          rlang_1.0.2           
+ [58] RJSONIO_1.3-1.6        lifecycle_1.0.1        sandwich_3.0-1        
+ [61] affyio_1.60.0          BiocFileCache_1.14.0   modelr_0.1.8          
+ [64] cellranger_1.1.0       rprojroot_2.0.2        graph_1.68.0          
+ [67] datawizard_0.3.0       Matrix_1.2-18          mc2d_0.1-21           
+ [70] zoo_1.8-9              reprex_2.0.1           whisker_0.4           
+ [73] GlobalOptions_0.1.2    processx_3.5.2         pheatmap_1.0.12       
+ [76] png_0.1-7              viridisLite_0.4.0      rjson_0.2.21          
+ [79] mzR_2.24.1             parameters_0.16.0      bitops_1.0-7          
+ [82] shinydashboard_0.7.2   getPass_0.2-2          R.oo_1.24.0           
+ [85] KernSmooth_2.23-17     blob_1.2.2             shape_1.4.6           
+ [88] tmvtnorm_1.4-10        scales_1.1.1           memoise_2.0.1         
+ [91] magrittr_2.0.3         plyr_1.8.6             gplots_3.1.1          
+ [94] zlibbioc_1.36.0        compiler_4.0.3         plotrix_3.8-2         
+ [97] pcaMethods_1.82.0      clue_0.3-60            cli_3.2.0             
+[100] affy_1.68.0            XVector_0.30.0         ps_1.6.0              
+[103] MASS_7.3-53            tidyselect_1.1.2       vsn_3.58.0            
+[106] stringi_1.6.2          highr_0.9              yaml_2.2.1            
+[109] GOSemSim_2.16.1        norm_1.0-9.5           MALDIquant_1.21       
+[112] grid_4.0.3             sass_0.4.1             tools_4.0.3           
+[115] circlize_0.4.14        rstudioapi_0.13        foreach_1.5.2         
+[118] git2r_0.29.0           gridExtra_2.3          farver_2.1.0          
+[121] mzID_1.28.0            digest_0.6.29          BiocManager_1.30.16   
+[124] shiny_1.7.1            proto_1.0.0            Rcpp_1.0.8.3          
+[127] broom_0.7.12           performance_0.8.0      later_1.3.0           
+[130] ncdf4_1.19             httr_1.4.2             MSnbase_2.15.7        
+[133] ComplexHeatmap_2.6.2   colorspace_2.0-3       rvest_1.0.2           
+[136] XML_3.99-0.9           fs_1.5.2               rematch2_2.1.2        
+[139] gmm_1.6-6              plotly_4.10.0          xtable_1.8-4          
+[142] jsonlite_1.8.0         zeallot_0.1.0          NLP_0.2-1             
+[145] R6_2.5.1               tm_0.7-8               gsubfn_0.7            
+[148] pillar_1.7.0           htmltools_0.5.2        mime_0.12             
+[151] glue_1.6.2             fastmap_1.1.0          BiocParallel_1.24.1   
+[154] codetools_0.2-16       mvtnorm_1.1-3          utf8_1.2.2            
+[157] lattice_0.20-41        bslib_0.3.1            sqldf_0.4-11          
+[160] curl_4.3.2             gtools_3.9.2           zip_2.2.0             
+[163] GO.db_3.12.1           limma_3.46.0           rmarkdown_2.12        
+[166] munsell_0.5.0          GetoptLong_1.0.5       GenomeInfoDbData_1.2.4
+[169] iterators_1.0.14       impute_1.64.0          haven_2.4.3           
+[172] gtable_0.3.0           bayestestR_0.11.5     </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
