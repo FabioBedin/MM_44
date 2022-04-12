@@ -1,17 +1,21 @@
-name: "MM_44"
+name: Template_LFQ
 output_dir: ../docs
 navbar:
-  title: "MM_44"
+  title: Template_LFQ
   left:
   - text: Home
     href: index.html
-  - text: About
-    href: about.html
-  - text: License
-    href: license.html
+  right:
+  - icon: fab fa-github
+    text: Source code
+    href: https://github.com/FabioBedin/MM_44
 output:
   workflowr::wflow_html:
     toc: yes
     toc_float: yes
+    toc_depth: 3
     theme: cosmo
     highlight: textmate
+    code_folding: hide
+    fig_caption: yes
+    df_print: paged
