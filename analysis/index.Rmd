@@ -8,4 +8,17 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+***
+# **Analysis**
+
+### **Pair comparisons:**
+
++ [OOPS_CDDP vs OOPS_NT](Template_LFQ.html)
+
++ [OOPS_CDDP vs OOPS_NT no imputation](Template_LFQ_noIMP.html)  
+
++ [WCE_CDDP vs WCE_NT](WCE_CDDP_vs_WCE_NT.html)
+
+### **Multiple comparisons:**
+
++ [ANOVA](ANOVA.html)

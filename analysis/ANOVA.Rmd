@@ -1,0 +1,508 @@
+---
+title: "LFQ_Analysis"
+author: "Fabio Bedin | MS-Unit at IEO"
+output: html_document
+params:
+  proteinGroups:
+    label: "Input dataset:"
+    value: proteinGroups.txt
+    input: file
+  expdesign:
+    label: "Experimental design:"
+    value: expdesign.tsv
+    input: file
+  n_peptides: 
+    label: "N° Peptides"
+    value: 0
+    input: select
+    choices: [0, 1, 2, 3]
+  Normalization:
+    label: "Normalization:"
+    value: VSN
+    input: select
+    choices: [Max-LFQ, VSN, MBQN]
+  FDR:
+    label: "FDR"
+    value: 0.05
+    input: select
+    choices: [0.05, 0.01]
+  Fold_change: 
+    label: "Fold Change"
+    value: 1
+    input: slider
+    min: 0
+    max: 2.5
+    step: 0.5
+    sep: ""
+  Imputation: TRUE
+  Cytoscape: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align = "center", warning=FALSE, message=FALSE, fig.height=8, fig.width=10)
+```
+
+```{css fontsize, echo=FALSE}
+p{
+  font-size: 16px;
+}
+```
+
+```{r libreries}
+## Proteomics
+library("MBQN")
+library("DEP")
+library("SummarizedExperiment")
+library("preprocessCore")
+library("enrichR")
+library("gprofiler2")
+library("org.Hs.eg.db")
+library("rrvgo")
+
+## Plots
+library("DT")
+library("patchwork")
+library("datapasta")
+library("ggstatsplot")
+library("UpSetR")
+library("ggrepel")
+library("visdat")
+library("naniar")
+library("GGally")
+
+## Networks
+library("STRINGdb")
+library("RCy3")
+library("RColorBrewer")
+
+## Other
+library("here")
+library("openxlsx")
+library("tidyverse")
+```
+
+```{r custom-functions}
+source(here::here("code/custom_functions.R"))
+```
+
+```{r load-PG}
+data <- read.csv(here::here(paste0("data/", params$proteinGroups)), header = TRUE,stringsAsFactors = FALSE, sep = "\t")
+## qui metterei anche Razor...unique.peptides al posto di Peptides, perchè così non conto i peptidi che sono attribuiti a più di 1 PG
+data <- data[data$Reverse != "+" & data$Potential.contaminant != "+" & data$Only.identified.by.site != "+" & data$Peptides >= params$n_peptides,]
+
+data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
+```
+
+```{r expdesig}
+expdesign <- read.table(here::here(paste0("data/", params$expdesign)), header = T, stringsAsFactors = F)
+
+expdesign <- expdesign %>% filter(!str_detect(condition, "LPS"))
+# expdesign <- expdesign %>% filter(!str_detect(condition, "LPS")) 
+# 
+# expdesign <- expdesign %>% filter(!label == "BCR4ALPS4h" & !label == "BCR4ALPS2h" )
+# 
+# expdesign <- expdesign %>% filter(!label == "BCR4ALPS1h" & !label == "BCR1AUT" & !label == "BCR4ALPS30min")
+
+#expdesign <- subset(expdesign, condition %in% conditions)
+
+columns<-match(paste("LFQ.intensity.",expdesign$label,sep=""),colnames(data_unique))
+
+data_se <- make_se(data_unique, columns, expdesign)
+
+## define automaticaly the best statistical threshold to filter data besed on replicates:
+if(max(expdesign$replicate)<=3){
+       threshold<-0
+     } else if(max(expdesign$replicate)<6){
+       threshold<-1
+     } else if (max(expdesign$replicate)>=6){
+       threshold<-trunc(max(expdesign$replicate)*0.25) ## 0.25 serve per avere sempre il 75% di valid vales
+     }
+
+data_filt <- filter_missval(data_se, thr = threshold)
+```
+
+
+***
+
+# **Introduction**
+
+First, we need to wrangling the original dataset. From the **proteinGroups** obtained by [MaxQuant](https://www.maxquant.org/) software, I remove proteins that are marked form the software as potential contaminant, only identify by site and reverse.   
+We che also filter the initial datasets by excluding all proteins identified by less than `r params$n_peptides` peptides.   
+Now, we generate some quality control plots to investigate the structure of the dataset and observe the effect of filters.    
+  
+#### **Normalization strategy:**   
+
+```{r normalization, results = 'asis'}
+if(params$Normalization == "VSN"){
+  data_filt <- normalize_vsn(data_filt)
+  print("VSN normalization is used")
+} else if(params$Normalization == "MBQN"){
+  data_filt <- normalize_MBQN(data_filt)
+  print("MBQN normalization is used")
+} else {
+  print("Max-LFQ normalization is used")
+}
+```
+
+```{r ANOVA-filter}
+vettore <- c("ADAMTS1", "AGRN", "AHCTF1", "AHCY", "ANKRD17", "ANXA3", "ANXA5", "ANXA7", "AP3S1", "APLP2", "APP", "ARHGDIA", "ATL3", "ATP6V1H", "AXL", "BMS1", "BPTF", "BYSL", "C15orf52", "C5orf24", "C9orf114", "CAPRIN1", "CCAR2", "CCDC59", "CENPF", "CEP170", "CFL2", "CHAMP1", "CHERP", "CHMP1A", "CHST3", "CLIC4", "CLUH", "CNN2", "COIL", "COL18A1", "COL1A1", "CPSF4", "CSTF2", "CSTF2T", "CYR61", "DCAF13", "DDX10", "DDX17", "DDX24", "DDX27", "DDX47", "DDX5", "DDX52", "DDX54", "DDX56", "DDX6", "DGCR8", "DNAJC10", "DNAJC5", "DRG1", "DYNLL2", "EBNA1BP2", "EEF1B2", "EIF4E", "EIF4ENIF1", "EIF5A", "EPS15", "FAM208A", "FAM98A", "FRAS1", "FSTL1", "FTSJ3", "FXR2", "GLG1", "GNL2", "GPC6", "GRPEL1", "GSTP1", "HCCS", "HDLBP", "HIRIP3", "HMGB1", "HNRNPLL", "HNRNPM", "HSPG2", "IGF2BP3", "IGFBP3", "IGFBP6", "IGFBP7", "IL6ST", "INO80E", "ITGB4", "KIAA0020", "KIF23", "KPNA4", "KRR1", "LAMA3", "LAMA5", "LAMB3", "LAMC1", "LAMC2", "LARP4", "LGMN", "LOXL2", "LRP8", "MAP7D1", "MCM7", "MDN1", "MEPCE", "MET", "MEX3C", "MEX3D", "MICA", "MRPL51", "MRPS35", "MRPS9", "MTHFSD", "MYBBP1A", "MYEF2", "MYO1B", "NDC80", "NGDN", "NID2", "NIFK", "NOC3L", "NOL11", "NONO", "NOP14", "NOP9", "NRP1", "NSA2", "NSUN5", "NUFIP2", "NUP133", "NUP153", "NUP50", "NUSAP1", "NUTF2", "OTUD4", "PALLD", "PAWR", "PAX8", "PCBD1", "PDCD11", "PHB2", "PHLDB1", "PLAU", "PNO1", "POLR1E", "POP1", "PPAN", "PPIA", "PPIE", "PPP1R10", "PRKDC", "PRPF8", "PRRC2B", "PRRC2C", "PSMA2", "PSMD3", "PSMD6", "PSPC1", "PTBP3", "PTGES3", "PTPRA", "PTPRF", "PUM1", "PUM1.1", "PURB", "PWP2", "QKI", "RAB8A", "RACGAP1", "RANBP1", "RBM10", "RBM15B", "RBM19", "RBM22", "RBM28", "RBM47", "RBM5", "RBM6", "RBM7", "RBMXL1", "RFC1", "RHOC", "RPL10A", "RPL7A", "RPL7L1", "RPS27", "RPS5", "RRP1", "RRP36", "RRS1", "RSL1D1", "S100A6", "SAP30BP", "SART3", "SELH", "SET", "SETD2", "SFPQ", "SLC25A24", "SLC38A2", "SND1", "SNRPB2", "SOD1", "SP100", "SP3", "SPATS2L", "SPEN", "SRP72", "STAM", "STRBP", "SUGP2", "SURF6", "SYNE1", "TAGLN2", "TBCA", "TCERG1", "TFB2M", "TIMP1", "TIMP2", "TMEM43", "TMSB10", "TMSB4X", "TNFRSF10D", "TNRC6B", "TPM3.1", "TPT1", "TRIP13", "TRMT1L", "UBAP2", "UBAP2L", "UBE2V2", "UBXN1", "UHRF1", "UPF1", "URB1", "UTP11L", "UTP14A", "UTP15", "UTP20", "UTP3", "UTP6", "VCAN", "VWA1", "WDR46", "WDR75", "WWC2", "XRCC5", "XRN2", "YBX2", "YLPM1", "YTHDC2", "YTHDF2", "ZC3H14", "ZC3H4", "ZC3H7A", "ZC3H7B", "ZCCHC7", "ZCCHC8", "ZFC3H1", "ZFR", "ZNF622", "ZNF638", "AARS", "AATF", "ABCC1", "ABCE1", "ABCF1", "ABT1", "ACADVL", "ACAT1", "ACIN1", "ACLY", "ACO2", "ACP1", "ACTA1", "ACTG1", "ACTN1", "ACTN4", "ACTR1A", "ACTR2", "ADAM10", "ADAR", "ADH5", "ADK", "ADNP", "AFG3L2", "AGPS", "AHNAK", "AHNAK2", "AIFM1", "AIMP1", "AK2", "AKAP12", "AKAP8", "AKAP8L", "AKAP9", "ALCAM", "ALDH18A1", "ALDH2", "ALDH6A1", "ALDH7A1", "ALDH9A1", "ALDOA", "ALDOC", "ALYREF", "ANKRD20A3", "ANLN", "ANP32A", "ANP32B", "ANP32E.1", "ANXA1", "ANXA11", "ANXA2", "ANXA4", "ANXA6", "AP2B1", "AP3B1", "AP3D1", "APEX1", "API5", "APMAP", "AQR", "ARCN1", "ARF3", "ARF4", "ARFGEF3", "ARGLU1", "ARHGEF2", "ARL6IP4", "ARPC2", "ARPP19", "ASPH", "ATAD2", "ATAD3A", "ATG9A", "ATP1A1", "ATP1B1", "ATP1B3", "ATP2A2", "ATP5A1", "ATP5B", "ATP5C1", "ATP5D", "ATP5F1", "ATP5H", "ATP6AP1", "ATRX", "ATXN2", "ATXN2L", "B2M", "BAG2", "BAG6", "BAIAP2", "BASP1", "BAZ2A", "BCAM", "BCAP31", "BCLAF1", "BCLAF1.1", "BIN1", "BOD1L1", "BOP1", "BRD2", "BRD4", "BRIX1", "BSG", "BST2", "BTF3", "BTF3L4", "BUB3", "BZW1", "C11orf68", "C11orf98", "C14orf166", "C17orf85", "C1QBP", "C8orf59", "CACYBP", "CAD", "CADM1", "CADM4", "CALD1", "CALR", "CALU", "CAND1", "CANX", "CAP1", "CAPN2", "CAPZA1", "CAPZB", "CASC4", "CAST", "CAV1", "CBX1", "CBX3", "CBX5", "CCAR1", "CCDC115", "CCDC12", "CCDC124", "CCDC137", "CCDC47", "CCNT1", "CCT2", "CCT3", "CCT4", "CCT5", "CCT6A", "CCT7", "CCT8", "CD109", "CD276", "CD3EAP", "CD44", "CD46", "CD46.1", "CD47", "CD55", "CD58", "CD63", "CD70", "CD81", "CD99L2", "CDC37", "CDC42", "CDC5L", "CDH2", "CDK1", "CDK11A", "CDK9", "CDKN2AIP", "CDV3", "CEBPZ", "CELF1", "CEP131", "CEP290", "CES2", "CFL1", "CHCHD3", "CHD1", "CHD4", "CHORDC1", "CIRBP", "CISD1", "CKAP4", "CKAP5", "CLIC1", "CLINT1", "CLTA", "CLTB", "CLTC", "CMPK1", "CNOT1", "CNP", "CNPY2", "CNTNAP3B", "COL12A1", "COL4A2", "COPA", "COPB1", "COPG1", "CORO1C", "COTL1", "COX4I1", "COX5A", "CPD", "CPNE1", "CPSF6", "CPSF7", "CRKL", "CROCC", "CS", "CSDE1", "CSE1L", "CSTB", "CSTF1", "CSTF3", "CTGF", "CTNNA1", "CTNND1", "CTR9", "CTSB", "CTTN", "CWC15", "CWC22", "CYB5B", "CYB5R3", "CYC1", "DAG1", "DAP", "DARS", "DAZAP1", "DBI", "DBN1", "DBT", "DCD", "DCTN1", "DCTN2", "DDB1", "DDOST", "DDX1", "DDX18", "DDX21", "DDX23", "DDX39B", "DDX3X", "DDX42", "DDX46", "DECR1", "DEK", "DENR", "DHRS2", "DHX15", "DHX30", "DHX36", "DHX37", "DHX9", "DIABLO", "DIDO1", "DIMT1", "DKC1", "DLD", "DNAJA1", "DNAJA2", "DNAJB1", "DNAJB11", "DNAJC1", "DNAJC8", "DNAJC9", "DNM1L", "DNMT1", "DNTTIP2", "DOHH", "DPP4", "DPYSL2", "DPYSL3", "DSG2", "DSP", "DSTN", "DTYMK", "DYNC1H1", "DYNC1I2", "DYNC1LI2", "ECE1", "ECHS1", "EDC4", "EDF1", "EEA1", "EEF1A1", "EEF1D", "EEF1G", "EEF2", "EFHD2", "EFTUD2", "EGFR", "EHD4", "EIF1", "EIF1AX", "EIF2AK2", "EIF2S1", "EIF2S2", "EIF2S3", "EIF3A", "EIF3B", "EIF3C", "EIF3D", "EIF3F", "EIF3G", "EIF3I", "EIF3J", "EIF4A1", "EIF4A3", "EIF4B", "EIF4G1", "EIF4G2", "EIF4H", "EIF5", "EIF5B", "EIF6", "ELAVL1", "ENO1", "ENSA", "EPB41L2", "EPHA2", "EPRS", "EPS8L2", "ERAL1", "ERBB2", "ERH", "ERI1", "ERO1L", "ERP29", "ERP44", "ESF1", "ESYT1", "ETFB", "EWSR1", "EXOSC10", "EZR", "F3", "FABP5", "FAM120A", "FAM129B", "FAM98B", "FARSB", "FASN", "FASTKD2", "FBL", "FBLL1", "FEN1", "FH", "FHL2", "FKBP1A", "FKBP2", "FKBP3", "FKBP9", "FLNA", "FLNB.1", "FMR1", "FN1", "FOLR1", "FSCN1", "FTH1", "FUBP1", "FUBP3", "FUS", "FXR1", "FXYD5", "G3BP1", "G3BP2", "G6PD", "GADD45GIP1", "GALNT2", "GANAB", "GAPDH", "GAR1", "GARS", "GART", "GCN1L1", "GDI2", "GGH", "GIGYF2", "GLRX3", "GLS", "GLS.1", "GLTSCR2", "GLUD1", "GMPS", "GNAI2", "GNAI3", "GNAS", "GNB2", "GNB2L1", "GNL3", "GNL3L", "GNS", "GOLGA2", "GOLGB1", "GOLIM4", "GOLM1", "GOT2", "GPATCH4", "GPATCH8", "GPC1", "GPC4", "GPI", "GPRC5A", "GPS1", "GRSF1", "GRWD1", "GSN", "GTPBP4", "GYG1", "H1FX", "H2AFV", "H2AFX", "H2AFY", "HADH", "HADHA", "HADHB", "HDAC2", "HDGF", "HDGFRP2", "HDGFRP3", "HEATR1", "HERC5", "HEXIM1", "HIST1H1B", "HIST1H1C", "HIST1H2AJ", "HIST1H2BL", "HIST1H4A", "HIST2H2AC", "HIST2H3A", "HIST2H3PS2", "HLA-A", "HLA-B", "HM13", "HMGA1", "HMGB2", "HMGB3", "HMGCS1", "HMGN5", "HMOX2", "HNRNPA0", "HNRNPA1", "HNRNPA2B1", "HNRNPA3", "HNRNPAB", "HNRNPC", "HNRNPC.1", "HNRNPD", "HNRNPDL", "HNRNPF", "HNRNPH1", "HNRNPH2", "HNRNPH3", "HNRNPK", "HNRNPK.1", "HNRNPL", "HNRNPR", "HNRNPR.1", "HNRNPU", "HNRNPUL1", "HNRNPUL2", "HOXB6", "HP1BP3", "HSD17B10", "HSD17B4", "HSP90AA1", "HSP90AB1", "HSP90B1", "HSPA1A", "HSPA4", "HSPA5", "HSPA6", "HSPA8", "HSPA9", "HSPB1", "HSPBP1", "HSPD1", "HSPE1", "HSPH1", "HTATSF1", "HUWE1", "HYOU1", "IARS", "IDH1", "IDH2", "IGF2BP2", "IGF2R", "IK", "IKBIP.1", "ILF2", "ILF3", "ILF3.1", "IMPDH2", "IMUP", "INF2", "INPP5F", "IPO5", "IPO7", "IQGAP1", "ISCU", "ITFG3", "ITGA3", "ITGA5", "ITGA6", "ITGAV", "ITGB1", "IWS1", "JUP", "KANK2", "KARS", "KDM2A", "KDM4B", "KHDRBS1", "KHDRBS3", "KHSRP", "KIAA0319L", "KIAA1217", "KIAA1524", "KIAA1598", "KIF2A", "KIF2C", "KIF4A", "KIF5B", "KLC1", "KMT2A", "KPNA2", "KPNA3", "KPNB1", "KRI1", "KRT18", "KTN1", "L1CAM", "L1RE1", "LAMB1", "LAMB2", "LAMP1", "LAMP2", "LAP3", "LARP1", "LARP4B", "LARP7", "LAS1L", "LASP1", "LDHA", "LDHB", "LDLR", "LEO1", "LEPRE1", "LGALS1", "LGALS3BP", "LIMA1", "LIN7C", "LLPH", "LMAN1", "LMNA", "LMNA.1", "LMNB1", "LMNB2", "LNPEP", "LRPAP1", "LRPPRC", "LRRC47", "LRRC59", "LRRFIP1", "LRRFIP1.1", "LSM14A", "LSM2", "LSM4", "LSM8", "LUC7L", "LUC7L2", "LUC7L3", "LUZP1", "LYAR", "M6PR", "MACF1.1", "MANF", "MAP1B", "MAP2", "MAP4", "MAP7D3", "MAPRE1", "MARCKS", "MARCKSL1", "MATR3", "MBNL1", "MCM5", "MCM6", "MDH2", "MECP2", "METAP1", "MFAP1", "MICAL3", "MINOS1", "MISP", "MKI67", "MKL1", "MKRN2", "MLEC", "MLLT4", "MMAB", "MMTAG2", "MNS1", "MOV10", "MPHOSPH10", "MRPL1", "MRPL12", "MRPL13", "MRPL2", "MRPL27", "MRPL28", "MRPL3", "MRPL37", "MRPL39", "MRPL41", "MRPL42", "MRPL43", "MRPL45", "MRPL49", "MRPL57", "MRPL9", "MRPS18A", "MRPS28", "MRPS30", "MRPS31", "MRPS5", "MRPS7", "MSI2", "MSN", "MTDH", "MTHFD1", "MTHFD1L", "MYH10", "MYH14", "MYH9", "MYL12B", "MYL6", "MYOF", "NAA15", "NACA", "NAP1L1", "NAP1L4", "NARS", "NASP", "NAT10", "NCAPG", "NCAPH", "NCBP1", "NCEH1", "NCL", "NCOA5", "NCSTN", "NDC1", "NDUFS1", "NEB", "NEBL", "NENF", "NHP2", "NIPBL", "NKAP", "NKRF", "NKTR", "NME1", "NME2", "NMT1", "NNMT", "NOB1", "NOC2L", "NOL6", "NOL8", "NOLC1", "NOMO1", "NOP16", "NOP2", "NOP56", "NOP58", "NPC1", "NPLOC4", "NPM1", "NPTN", "NSDHL", "NSFL1C", "NSRP1", "NSUN2", "NUCB1", "NUCB2", "NUCKS1", "NUDC", "NUDT16L1", "NUDT21", "NUMA1", "NUMA1.1", "NUP160", "NUP214", "NUP98", "NXF1", "ODF2", "OGDH", "OLA1", "P09493-3", "P09493-5", "P0DP25", "P4HA1", "P4HB", "PA2G4", "PABPC1", "PABPC4", "PABPN1", "PAF1", "PAICS", "PARK7", "PARP1", "PATL1", "PCBP1", "PCM1", "PCNA", "PCNP", "PCNT", "PDAP1", "PDCD5", "PDCD6IP", "PDIA3", "PDIA4", "PDIA6", "PDLIM5", "PDLIM7", "PEBP1", "PEF1", "PELO", "PES1", "PFN1", "PFN2", "PGAM1", "PGAM5", "PGD", "PGK1", "PGRMC1", "PGRMC2", "PHB", "PHF3", "PHF5A", "PHF6", "PHGDH", "PHIP", "PKM", "PKP3", "PLAUR", "PLEC", "PLIN3", "PLOD1", "PLS3", "PLXNB2", "PNISR", "PNN", "PODXL", "PODXL2", "POLDIP3", "POLR2A", "POLR2B", "POLR2H", "POLRMT", "PPA1", "PPFIA3", "PPIA.1", "PPIB", "PPID", "PPIG", "PPIL4", "PPM1G", "PPP1CC", "PPP1R12A", "PPP1R1B", "PPP1R8", "PPP2R1A", "PPP2R2A", "PPP2R5D", "PRC1", "PRDM15", "PRDX1", "PRDX2", "PRDX3", "PRDX4", "PRDX5", "PRDX6", "PRKCSH", "PRKRA", "PRMT1", "PRNP", "PROSC", "PRPF19", "PRPF3", "PRPF31", "PRPF38B", "PRPF4", "PRPF40A", "PRPF4B", "PRPF6", "PRRC2A", "PSAP", "PSIP1", "PSMA3", "PSMA4", "PSMA5", "PSMA7", "PSMB6", "PSMB7", "PSMC1", "PSMC2", "PSMC3", "PSMC4", "PSMC5", "PSMC6", "PSMD1", "PSMD11", "PSMD12", "PSMD2", "PSMD4", "PSMD7", "PSME1", "PTBP1", "PTCD1", "PTCD3", "PTGIS", "PTK7", "PTPRB", "PTPRG", "PTPRJ", "PTRF", "PTRH1", "PUF60", "PUM2", "PURA", "PVR", "PVRL3", "PYCR2", "PYGB", "PYGL", "Q15366-3", "QSOX2", "R3HDM1", "RAB10", "RAB11B", "RAB11FIP1", "RAB14", "RAB1A", "RAB5C", "RAB6A", "RAB7A", "RABGGTA", "RAD17", "RAD50", "RALY", "RAN", "RANBP2", "RANGAP1", "RAP1B", "RARS", "RAVER1", "RBBP4", "RBBP6", "RBBP7", "RBFOX2", "RBM12", "RBM12B", "RBM14", "RBM15", "RBM17", "RBM25", "RBM27", "RBM3", "RBM34", "RBM39", "RBM4", "RBM8A", "RBMS1", "RBMS2", "RBMX", "RBMX2", "RBPMS", "RCC1", "RCN1", "RCN2", "RDX", "REEP5", "REPS1", "RHOA", "RIF1", "RNH1", "RNMT", "RNPS1", "RPA1", "RPF2", "RPL10", "RPL11", "RPL12", "RPL13", "RPL13A", "RPL14", "RPL15", "RPL17", "RPL18", "RPL18A", "RPL19", "RPL21", "RPL22", "RPL23", "RPL23A", "RPL24", "RPL26", "RPL27", "RPL27A", "RPL28", "RPL3", "RPL30", "RPL31", "RPL34", "RPL35", "RPL36AL", "RPL38", "RPL4", "RPL5", "RPL6", "RPL7", "RPL8", "RPL9", "RPLP0", "RPLP2", "RPN1", "RPN2", "RPS10", "RPS11", "RPS12", "RPS13", "RPS14", "RPS15", "RPS15A", "RPS16", "RPS17", "RPS18", "RPS19", "RPS2", "RPS20", "RPS21", "RPS24", "RPS25", "RPS26", "RPS27A", "RPS27L", "RPS28", "RPS3", "RPS3A", "RPS4X", "RPS6", "RPS7", "RPS8", "RPS9", "RPSA", "RRBP1", "RRP12", "RRP15", "RRP1B", "RRP9", "RSF1", "RSRC2", "RTCB", "RTF1", "RTN4", "RUVBL1", "RUVBL2", "S100A10", "S100A11", "S100A16", "S100A2", "S100A3", "S100A4", "SAFB", "SAFB2", "SAP18", "SARNP", "SARS", "SART1", "SCAF1", "SCAF11", "SCAF8", "SCARB2", "SCP2", "SDAD1", "SDC1", "SDC2", "SDC4", "SDF4", "SDHA", "SDK2", "SEC22B", "SEC31A", "SEC61B", "SEC62", "SEC63", "SEPT11", "SEPT7", "SEPT9", "SERBP1", "SERBP1.1", "SERPINB1", "SERPINB6", "SERPINH1", "SERPINI2", "SETD1A", "SF1", "SF3A1", "SF3A2", "SF3A3", "SF3B1", "SF3B2", "SF3B3", "SF3B4", "SF3B6", "SFN", "SH3GL1", "SH3GLB2", "SHMT2", "SKIV2L2", "SKP1", "SLC1A5", "SLC25A6", "SLC26A2", "SLC29A1", "SLC2A1", "SLC39A10", "SLC39A14", "SLC39A6", "SLC3A2", "SLC4A2", "SLC4A7", "SLC7A1", "SLC7A5", "SLC9A3R1", "SLC9A3R2", "SLIRP", "SLK", "SLTM", "SMARCA4", "SMARCC2", "SMC1A", "SMC2", "SMC3", "SMC4", "SMCHD1", "SMNDC1", "SNRNP200", "SNRNP70", "SNRPA", "SNRPB", "SNRPC", "SNRPD1", "SNRPD2", "SNRPD3", "SNRPF", "SNRPG", "SNW1", "SON", "SORBS2", "SORD", "SPANXB1", "SPATS2", "SPINT2", "SPTAN1", "SPTBN1", "SQSTM1", "SREK1", "SRP14", "SRP68", "SRP9", "SRPK1", "SRPR", "SRPRB", "SRRM1", "SRRM2", "SRRT", "SRSF1", "SRSF10", "SRSF11", "SRSF2", "SRSF3", "SRSF4", "SRSF5", "SRSF6", "SRSF7", "SRSF9", "SSB", "SSBP1", "SSR1", "SSRP1", "ST13", "STAT1", "STAU1", "STAU2", "STIM1", "STIP1", "STMN1", "STMN2", "STOML2", "STRAP", "STT3A", "STUB1", "STX7", "SUB1", "SUMO1", "SUMO2", "SUMO3", "SUPT16H", "SUPT5H", "SUPT6H", "SWAP70", "SYNCRIP", "SYPL1", "SZRD1", "TACC1", "TACSTD2", "TAF15", "TAGLN", "TALDO1", "TARDBP", "TARS", "TBCB", "TBL2", "TBL3", "TCEA1", "TCOF1", "TCP1", "TES", "TFRC", "TGOLN2", "THRAP3", "TIA1", "TIAL1.1", "TIMM10", "TIMM44", "TIMM50", "TINAGL1", "TJP1", "TKT", "TLN1", "TLN2", "TMED10", "TMED9", "TMEM109", "TMEM87A", "TMPO", "TMPO.1", "TMSB15B", "TMX1", "TMX3", "TNPO1", "TNS1", "TOP1", "TOP2A", "TOP2B", "TOR1AIP1.1", "TP53BP1", "TPD52", "TPD52L2", "TPI1", "TPM4", "TPPP3", "TPR", "TPX2", "TRA2A", "TRA2B", "TRAP1", "TRIM25", "TRIM28", "TRIP12", "TRMT1", "TRMT10C", "TSN", "TSR1", "TUBA1B", "TUBA4A", "TUBB", "TUBB4A", "TUBB4B", "TUBB6", "TUBG1", "TUFM", "TWF1", "TWSG1", "TXN", "TXNDC12", "TXNDC15", "TXNDC5", "TXNL1", "TXNRD1", "U2AF1", "U2AF2", "U2SURP", "UBA1", "UBE2L3", "UBR4", "UBTF", "UBXN4", "UFL1", "UGDH", "UGGT1", "UQCRC1", "USP10", "USP14", "USP36", "UTP18", "VAMP3", "VAMP5", "VAPA", "VAPB", "VARS", "VASP", "VAT1", "VCL", "VCP", "VCPIP1", "VDAC1", "VDAC2", "VIM", "VIMP", "VPS35", "WARS", "WBP11", "WDR1", "WDR3", "WDR33", "WDR43", "WDR74", "WHSC1", "WIBG", "XIRP2", "XPO1", "XPO5", "XRCC6", "YARS", "YARS2", "YBX1", "YBX3", "YTHDC1", "YTHDF1", "YTHDF3", "YWHAB", "YWHAE", "YWHAG", "YWHAH", "YWHAQ", "YWHAZ", "ZC3H11A", "ZC3H13", "ZC3H15", "ZC3H18", "ZC3HAV1", "ZCCHC3", "ZCRB1", "ZNF207", "ZNF326", "ZRANB2")
+
+pino <- assay(data_filt) %>% data.frame() %>% rownames_to_column() %>% filter(rowname %in% vettore)  
+data_filt <- data_filt[pino$rowname, ]
+
+```
+
+## **1. Quality control plots** {.tabset .tabset-fade}
+
+### Proteins per samples {.tabset}
+
+This plot show the number of proteins identify in each samples *after and before User define* filters:
+
+#### Filtered
+
+```{r proteins-filt}
+plot_numbers_lables(data_filt, lab_size = 3)
+```
+
+#### Not-Filtered
+
+```{r proteins-NOfilt}
+plot_numbers_lables(data_se, lab_size = 3)
+```
+
+### Distributions {.tabset}
+
+This plot is useful for checking the distributions of the samples *after and before User define* filters:
+
+#### Filtered
+
+```{r normalization-filt}
+plot_normalization(data_filt)
+```
+
+#### Not-Filtered
+
+```{r normalization-NOfilt}
+plot_normalization(data_se)
+```
+
+### Missing data {.tabset}
+
+This plot we can explore the missing data pattern *after and before User define* filters.
+Notice that the percentages of missingness are provided in the data. These are accurate to 1 decimal place.
+Also the dataset is arranged by columns with most missingness.
+
+#### Filtered
+
+```{r missing-data-filt}
+assay(data_filt) %>% 
+  as.data.frame() %>% 
+  vis_miss(., sort_miss = TRUE)
+```
+
+#### Not-Filtered
+
+```{r missing-data-NOfilt}
+assay(data_se) %>% 
+  as.data.frame() %>% 
+  vis_miss(., sort_miss = TRUE)
+```
+
+### Sample CVs {.tabset}
+
+The coefficient of variation (CV) is a statistical measure of the dispersion of data points in a data series around the mean. The coefficient of variation represents the ratio of the standard deviation to the mean, and it is a useful statistic for comparing the degree of variation from one data series to another, even if the means are drastically different from one another.
+
+#### Filtered
+
+```{r CVs-filt}
+plot_cvs(data_filt)
+```
+
+#### Not-Filtered
+
+```{r CVs-NOfilt}
+plot_cvs(data_se)
+```
+
+## **2. Upset plot**
+
+With this plot we can identify the numper of prteins in common within the 2 conditions or in common between all condition.
+
+```{r upset-both, fig.height=12, fig.width=15}
+define_set <- assay(data_filt) %>% colnames()
+n_sets <- length(define_set)
+n_each <- n_sets / 4
+
+assay(data_filt) %>% 
+  as.data.frame() %>% 
+  rownames_to_column() %>% 
+  pivot_longer(!rowname, names_to = "samples", values_to = "intensity") %>% 
+  mutate(intensity = if_else(is.na(intensity), 0, 1)) %>% 
+  pivot_wider(names_from = samples, values_from = intensity) %>% 
+  as.data.frame() %>% 
+  upset(nsets = n_sets,
+        sets = rev(define_set),
+        order.by = "freq",
+        keep.order = T,
+        text.scale = 2.5,
+        point.size = 4,
+        line.size = 0.5, 
+        sets.bar.color = rep(c("#df57bc", "#3fa7d6", "#60d394", "#c5d86d"), each = n_each),
+        main.bar.color  = "gray44")
+  
+```
+
+## **3. `r if(params$Imputation){"Imputation"}else{"Unique proteins"}`**
+
+`r if(params$Imputation){"An idealized version of a label-free discovery mass spectrometry proteomics experiment would provide absolute abundance measurements for a whole proteome, across varying conditions. Unfortunately, this ideal is not realized. Measurements are made on peptides requiring an inferential step to obtain protein level estimates. The inference is complicated by experimental factors that necessitate relative abundance estimation and result in widespread non-ignorable missing data. Relative abundance on the log scale takes the form of parameter contrasts. In a complete-case analysis, contrast estimates may be biased by missing data and a substantial amount of useful information will often go unused."}else{"This table show unique protein for both conditions"}`
+
+
+```{r imputation, eval=params$Imputation, include=params$Imputation, results='hide'}
+data_filt <- MakeMeanImputation(data_filt)
+
+data_imputed <- impute(data_filt, fun = "man", shift = 1.8, scale = 0.3)
+
+plot_imputation(data_filt, data_imputed)
+
+data_filt <- data_imputed
+```
+
+## **4. Differential enrichment analysis** 
+
+Protein-wise linear models combined with empirical Bayes statistics are used for the differential enrichment analysis (or differential expression analysis) and False discovery rate (FDR) is ajusted with *Benjamini-Hochberg* procedure.
+Significant proteins are are define with **FDR = `r params$FDR`** and **Fold change = `r params$Fold_change`**
+
+```{r DEP}
+data_diff <- anova_test(data_filt)
+
+dep <- add_rejections(data_diff, alpha = params$FDR, lfc = params$Fold_change)
+
+results<-get_results(dep)
+```
+
+There are **`r results %>% filter(significant) %>% nrow()`** significant proteins.
+
+The results from the previous analysis can be easily visualized by a number of functions. These visualizations assist in the determination of the optimal cutoffs to be used, highlight the most interesting samples and contrasts, and pinpoint differentially enriched/expressed proteins.
+
+### **4.1. Visualization of the results** {.tabset .tabset-fade}
+
+#### PCA
+
+The PCA plot can be used to get a high-level overview of the data. This can be very useful to observe batch effects, such as clear differences between replicates.
+
+```{r PCA}
+if(params$Imputation){
+  if(nrow(dep) >= 500){
+    n_value <- 500
+  }else {
+    n_value <- nrow(dep)
+  }
+  plot_pca(dep, x = 1, y = 2, n = n_value, point_size = 4, indicate = "condition", label = T, label_size = 3)
+} else {
+  var <- apply(assay(dep), 1, sd)
+  df <- assay(dep)[order(var, decreasing = TRUE)[seq_len(nrow(dep))],]
+  n_value <- df %>% as.data.frame() %>% drop_na() %>% nrow()
+  if(n_value >= 500){
+    n_value <- 500
+  }
+  plot_pca(dep, x = 1, y = 2, n = n_value, point_size = 4, indicate = "condition", label = T, label_size = 3)
+}
+```
+
+#### `r if(params$Imputation){"Correlation"}`
+
+```{r correlation-matrix, eval=params$Imputation, include=params$Imputation}
+plot_cor(dep, significant = TRUE, lower = 0, upper = 1, pal = "Reds")
+```
+
+#### `r if(params$Imputation){"Cluster heatmap"}` {.tabset .tabset-fade}
+
+`r if(params$Imputation){"The heatmap representation gives an overview of all significant proteins (rows) in all samples (columns). This allows to see general trends, for example if one sample or replicate is really different compared to the others. Additionally, the clustering of samples (columns) can indicate closer related samples and clustering of proteins (rows) indicates similarly behaving proteins."}`
+
+```{r cluster-heatmap, eval=params$Imputation, include=params$Imputation}
+if(results %>% filter(significant) %>% nrow() <= 100){
+  plot_heatmap(dep, type = "centered", kmeans = T, k = 5, show_row_names = T, indicate = "condition", col_limit = 5, clustering_distance = "euclidean")
+}else {
+  plot_heatmap(dep, type = "centered", kmeans = T, k = 5, show_row_names = F, indicate = "condition", col_limit = 5)
+}
+
+table_info <- plot_heatmap(dep, type = "centered", kmeans = T, k = 5, show_row_names = F, indicate = "condition", col_limit = 5, plot = F)
+```
+
+##### Cluster 1
+
+```{r cluster-1}
+ClusterPlot(table_info, 1, "#6d6875")
+```
+
+##### Cluster 2
+
+```{r cluster-2}
+ClusterPlot(table_info, 2, "#b5838d") 
+```
+
+##### Cluster 3
+
+```{r cluster-3}
+ClusterPlot(table_info, 3, "#e5989b")
+```
+
+##### Cluster 4
+
+```{r cluster-4}
+ClusterPlot(table_info, 4, "#ffb4a2")
+```
+
+##### Cluster 5
+
+```{r cluster-5}
+ClusterPlot(table_info, 5, "#ffcdb2")
+```
+
+
+### **4.2. Result table**
+
+In this table are summarized the results of DEP analysis, sorted by p.value. Proteins that are UP regulated are colored with a red box in Fold change column, in the orhter hand proteins that are DOWN regulated are colored with blue.
+
+```{r res-teble}
+results %>% 
+  #select(starts_with("name") | starts_with(test)) %>% 
+  filter(significant) %>%
+  select(name, significant) %>% 
+  # view()
+  DT::datatable(options = list(
+  columnDefs = list(list(className = 'dt-center', targets = 1:2)),
+  pageLength = 10))
+```
+
+
+## **5. Gene Ontology** {.tabset .tabset-fade}
+
+Now I perfom a gene onology analysis (GO or by branch GO:MF, GO:BP, GO:CC) and a KEGG ontology.  
+The enrichment results are visualized with an interactive **Manhattan-like-plot** named "Gostplot".
+
+### Gostplot
+
+
+```{r GO-cond1}
+Gname <- results %>% filter(significant) %>% pull(name)
+
+if(length(Gname) == 0){
+  print("NOT enough data.")
+  GO <- NULL
+}else{
+  GO <- gost(query = Gname, organism = "hsapiens", sources = c("GO:BP", "GO:MF", "GO:CC", "REAC"), ordered_query = T, evcodes = TRUE)
+  if(is.null(GO)){
+    print("NOT enough data.")
+  }else{
+    gostplot(GO, capped = TRUE, interactive = TRUE)
+  }
+}
+```
+
+### Table results
+
+The results can also be visualized with a table: 
+
+```{r GO-table-cond1}
+if(is.null(GO)){
+  print("NOT enough data.")
+}else{
+  GO$result %>% 
+    as.data.frame() %>% 
+    select(starts_with(c("source", "term_name", "p_value", "term_size", "intersection_size"))) %>%
+    arrange(p_value) %>%  
+    mutate(p_value = format(p_value, scientific = T, digits = 2)) %>% 
+    DT::datatable(options = list(
+    columnDefs = list(list(className = 'dt-center', targets = 1:6)),
+    pageLength = 10)) %>%
+    formatStyle('source', backgroundColor = styleEqual(c("GO:BP", "GO:MF", "GO:CC", "REAC"), c('orange', 'tomato', 'lightgreen', '#3366cc')))
+}
+```
+
+### Treemap {.tabset .tabset-fade}
+
+#### BP
+
+```{r BP-cond1}
+if(sum(GO$result$source == "GO:BP") >= 5 & !is.null(GO)){
+  simMatrix <- GO$result %>% 
+  as.data.frame() %>%
+  filter(source == "GO:BP") %>% 
+  pull(term_id) %>% 
+  calculateSimMatrix(orgdb="org.Hs.eg.db", ont="BP", method="Rel")
+
+scores <- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms <- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb="org.Hs.eg.db")
+
+treemapPlot(reducedTerms)
+BP <- T
+}else{
+  print("NOT enough data.")
+  BP <- F
+}
+```
+
+#### MF
+
+```{r MF-cond1}
+if(sum(GO$result$source == "GO:MF") >= 5 & !is.null(GO)){
+simMatrix <- GO$result %>% 
+  as.data.frame() %>%
+  filter(source == "GO:MF") %>% 
+  pull(term_id) %>% 
+  calculateSimMatrix(orgdb="org.Hs.eg.db", ont="MF", method="Rel")
+
+scores <- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms <- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb="org.Hs.eg.db")
+
+treemapPlot(reducedTerms)
+MF <- T
+}else{
+  print("NOT enough data.")
+  MF <- F
+}
+```
+
+#### CC
+
+```{r CC-cond1}
+if(sum(GO$result$source == "GO:CC") >= 5 & !is.null(GO)){
+simMatrix <- GO$result %>% 
+  as.data.frame() %>%
+  filter(source == "GO:CC") %>% 
+  pull(term_id) %>% 
+  calculateSimMatrix(orgdb="org.Hs.eg.db", ont="CC", method="Rel")
+
+scores <- setNames(-log10(GO$result$p_value), GO$result$term_id)
+
+reducedTerms <- reduceSimMatrix(simMatrix,
+                                scores,
+                                threshold=0.7,
+                                orgdb="org.Hs.eg.db")
+
+treemapPlot(reducedTerms)
+CC <- T
+}else{
+  print("NOT enough data.")
+  CC <- F
+}
+```
+
+### ScatterPlot
+
+```{r scatter-cond1, fig.height=12, fig.width=15}
+if(BP | MF | CC){
+scatterPlot(simMatrix, reducedTerms, size = "score", labelSize = 5)
+}else{
+  print("NOT enough data.")
+}
+```
